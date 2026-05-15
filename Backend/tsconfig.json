@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler", // Fixed casing
+
+    "rootDir": "./", // Changed from ./src to ./ to include prisma folder
+    "outDir": "./dist",
+
+    "strict": true,
+    "esModuleInterop": true,
+
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "types": ["node"]
+  },
+  "include": ["src", "prisma"] // Added prisma folder here
+}

@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+model Employee {
+  id         String       @id
+  name       String
+  department String?
+  records    WorkRecord[]
+}
+
+model WorkRecord {
+  id         Int      @id @default(autoincrement())
+  employeeId String
+  date       DateTime
+  checkIn    DateTime?
+  checkOut   DateTime?
+  breakIn    DateTime?
+  breakOut   DateTime?
+  status     String
+  overtime   Int        @default(0)
+
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  @@unique([employeeId, date])
+  @@index([employeeId, checkIn])
+}
+
+model User{
+  id                      Int       @id @default(autoincrement())
+  username                String    @unique
+  email                   String    @unique
+  password                String
+  role                    String    @default("user")
+  emailVerified           Boolean   @default(false)
+  emailVerificationCode   String?
+  emailVerificationExpiry DateTime?
+  passwordResetToken      String?
+  passwordResetExpiry     DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+}
