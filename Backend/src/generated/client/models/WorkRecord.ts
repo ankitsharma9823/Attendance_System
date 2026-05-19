@@ -29,11 +29,13 @@ export type AggregateWorkRecord = {
 export type WorkRecordAvgAggregateOutputType = {
   id: number | null
   overtime: number | null
+  totalHours: number | null
 }
 
 export type WorkRecordSumAggregateOutputType = {
   id: number | null
   overtime: number | null
+  totalHours: number | null
 }
 
 export type WorkRecordMinAggregateOutputType = {
@@ -46,6 +48,10 @@ export type WorkRecordMinAggregateOutputType = {
   breakOut: Date | null
   status: string | null
   overtime: number | null
+  isOvertime: boolean | null
+  isHalfDay: boolean | null
+  deviceIp: string | null
+  totalHours: number | null
 }
 
 export type WorkRecordMaxAggregateOutputType = {
@@ -58,6 +64,10 @@ export type WorkRecordMaxAggregateOutputType = {
   breakOut: Date | null
   status: string | null
   overtime: number | null
+  isOvertime: boolean | null
+  isHalfDay: boolean | null
+  deviceIp: string | null
+  totalHours: number | null
 }
 
 export type WorkRecordCountAggregateOutputType = {
@@ -70,6 +80,10 @@ export type WorkRecordCountAggregateOutputType = {
   breakOut: number
   status: number
   overtime: number
+  isOvertime: number
+  isHalfDay: number
+  deviceIp: number
+  totalHours: number
   _all: number
 }
 
@@ -77,11 +91,13 @@ export type WorkRecordCountAggregateOutputType = {
 export type WorkRecordAvgAggregateInputType = {
   id?: true
   overtime?: true
+  totalHours?: true
 }
 
 export type WorkRecordSumAggregateInputType = {
   id?: true
   overtime?: true
+  totalHours?: true
 }
 
 export type WorkRecordMinAggregateInputType = {
@@ -94,6 +110,10 @@ export type WorkRecordMinAggregateInputType = {
   breakOut?: true
   status?: true
   overtime?: true
+  isOvertime?: true
+  isHalfDay?: true
+  deviceIp?: true
+  totalHours?: true
 }
 
 export type WorkRecordMaxAggregateInputType = {
@@ -106,6 +126,10 @@ export type WorkRecordMaxAggregateInputType = {
   breakOut?: true
   status?: true
   overtime?: true
+  isOvertime?: true
+  isHalfDay?: true
+  deviceIp?: true
+  totalHours?: true
 }
 
 export type WorkRecordCountAggregateInputType = {
@@ -118,6 +142,10 @@ export type WorkRecordCountAggregateInputType = {
   breakOut?: true
   status?: true
   overtime?: true
+  isOvertime?: true
+  isHalfDay?: true
+  deviceIp?: true
+  totalHours?: true
   _all?: true
 }
 
@@ -217,6 +245,10 @@ export type WorkRecordGroupByOutputType = {
   breakOut: Date | null
   status: string
   overtime: number
+  isOvertime: boolean
+  isHalfDay: boolean
+  deviceIp: string | null
+  totalHours: number
   _count: WorkRecordCountAggregateOutputType | null
   _avg: WorkRecordAvgAggregateOutputType | null
   _sum: WorkRecordSumAggregateOutputType | null
@@ -252,6 +284,10 @@ export type WorkRecordWhereInput = {
   breakOut?: Prisma.DateTimeNullableFilter<"WorkRecord"> | Date | string | null
   status?: Prisma.StringFilter<"WorkRecord"> | string
   overtime?: Prisma.IntFilter<"WorkRecord"> | number
+  isOvertime?: Prisma.BoolFilter<"WorkRecord"> | boolean
+  isHalfDay?: Prisma.BoolFilter<"WorkRecord"> | boolean
+  deviceIp?: Prisma.StringNullableFilter<"WorkRecord"> | string | null
+  totalHours?: Prisma.FloatFilter<"WorkRecord"> | number
   employee?: Prisma.XOR<Prisma.EmployeeScalarRelationFilter, Prisma.EmployeeWhereInput>
 }
 
@@ -265,6 +301,10 @@ export type WorkRecordOrderByWithRelationInput = {
   breakOut?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   overtime?: Prisma.SortOrder
+  isOvertime?: Prisma.SortOrder
+  isHalfDay?: Prisma.SortOrder
+  deviceIp?: Prisma.SortOrderInput | Prisma.SortOrder
+  totalHours?: Prisma.SortOrder
   employee?: Prisma.EmployeeOrderByWithRelationInput
 }
 
@@ -282,6 +322,10 @@ export type WorkRecordWhereUniqueInput = Prisma.AtLeast<{
   breakOut?: Prisma.DateTimeNullableFilter<"WorkRecord"> | Date | string | null
   status?: Prisma.StringFilter<"WorkRecord"> | string
   overtime?: Prisma.IntFilter<"WorkRecord"> | number
+  isOvertime?: Prisma.BoolFilter<"WorkRecord"> | boolean
+  isHalfDay?: Prisma.BoolFilter<"WorkRecord"> | boolean
+  deviceIp?: Prisma.StringNullableFilter<"WorkRecord"> | string | null
+  totalHours?: Prisma.FloatFilter<"WorkRecord"> | number
   employee?: Prisma.XOR<Prisma.EmployeeScalarRelationFilter, Prisma.EmployeeWhereInput>
 }, "id" | "employeeId_date">
 
@@ -295,6 +339,10 @@ export type WorkRecordOrderByWithAggregationInput = {
   breakOut?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   overtime?: Prisma.SortOrder
+  isOvertime?: Prisma.SortOrder
+  isHalfDay?: Prisma.SortOrder
+  deviceIp?: Prisma.SortOrderInput | Prisma.SortOrder
+  totalHours?: Prisma.SortOrder
   _count?: Prisma.WorkRecordCountOrderByAggregateInput
   _avg?: Prisma.WorkRecordAvgOrderByAggregateInput
   _max?: Prisma.WorkRecordMaxOrderByAggregateInput
@@ -315,6 +363,10 @@ export type WorkRecordScalarWhereWithAggregatesInput = {
   breakOut?: Prisma.DateTimeNullableWithAggregatesFilter<"WorkRecord"> | Date | string | null
   status?: Prisma.StringWithAggregatesFilter<"WorkRecord"> | string
   overtime?: Prisma.IntWithAggregatesFilter<"WorkRecord"> | number
+  isOvertime?: Prisma.BoolWithAggregatesFilter<"WorkRecord"> | boolean
+  isHalfDay?: Prisma.BoolWithAggregatesFilter<"WorkRecord"> | boolean
+  deviceIp?: Prisma.StringNullableWithAggregatesFilter<"WorkRecord"> | string | null
+  totalHours?: Prisma.FloatWithAggregatesFilter<"WorkRecord"> | number
 }
 
 export type WorkRecordCreateInput = {
@@ -325,6 +377,10 @@ export type WorkRecordCreateInput = {
   breakOut?: Date | string | null
   status: string
   overtime?: number
+  isOvertime?: boolean
+  isHalfDay?: boolean
+  deviceIp?: string | null
+  totalHours?: number
   employee: Prisma.EmployeeCreateNestedOneWithoutRecordsInput
 }
 
@@ -338,6 +394,10 @@ export type WorkRecordUncheckedCreateInput = {
   breakOut?: Date | string | null
   status: string
   overtime?: number
+  isOvertime?: boolean
+  isHalfDay?: boolean
+  deviceIp?: string | null
+  totalHours?: number
 }
 
 export type WorkRecordUpdateInput = {
@@ -348,6 +408,10 @@ export type WorkRecordUpdateInput = {
   breakOut?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   overtime?: Prisma.IntFieldUpdateOperationsInput | number
+  isOvertime?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isHalfDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalHours?: Prisma.FloatFieldUpdateOperationsInput | number
   employee?: Prisma.EmployeeUpdateOneRequiredWithoutRecordsNestedInput
 }
 
@@ -361,6 +425,10 @@ export type WorkRecordUncheckedUpdateInput = {
   breakOut?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   overtime?: Prisma.IntFieldUpdateOperationsInput | number
+  isOvertime?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isHalfDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalHours?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type WorkRecordCreateManyInput = {
@@ -373,6 +441,10 @@ export type WorkRecordCreateManyInput = {
   breakOut?: Date | string | null
   status: string
   overtime?: number
+  isOvertime?: boolean
+  isHalfDay?: boolean
+  deviceIp?: string | null
+  totalHours?: number
 }
 
 export type WorkRecordUpdateManyMutationInput = {
@@ -383,6 +455,10 @@ export type WorkRecordUpdateManyMutationInput = {
   breakOut?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   overtime?: Prisma.IntFieldUpdateOperationsInput | number
+  isOvertime?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isHalfDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalHours?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type WorkRecordUncheckedUpdateManyInput = {
@@ -395,6 +471,10 @@ export type WorkRecordUncheckedUpdateManyInput = {
   breakOut?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   overtime?: Prisma.IntFieldUpdateOperationsInput | number
+  isOvertime?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isHalfDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalHours?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type WorkRecordListRelationFilter = {
@@ -422,11 +502,16 @@ export type WorkRecordCountOrderByAggregateInput = {
   breakOut?: Prisma.SortOrder
   status?: Prisma.SortOrder
   overtime?: Prisma.SortOrder
+  isOvertime?: Prisma.SortOrder
+  isHalfDay?: Prisma.SortOrder
+  deviceIp?: Prisma.SortOrder
+  totalHours?: Prisma.SortOrder
 }
 
 export type WorkRecordAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   overtime?: Prisma.SortOrder
+  totalHours?: Prisma.SortOrder
 }
 
 export type WorkRecordMaxOrderByAggregateInput = {
@@ -439,6 +524,10 @@ export type WorkRecordMaxOrderByAggregateInput = {
   breakOut?: Prisma.SortOrder
   status?: Prisma.SortOrder
   overtime?: Prisma.SortOrder
+  isOvertime?: Prisma.SortOrder
+  isHalfDay?: Prisma.SortOrder
+  deviceIp?: Prisma.SortOrder
+  totalHours?: Prisma.SortOrder
 }
 
 export type WorkRecordMinOrderByAggregateInput = {
@@ -451,11 +540,16 @@ export type WorkRecordMinOrderByAggregateInput = {
   breakOut?: Prisma.SortOrder
   status?: Prisma.SortOrder
   overtime?: Prisma.SortOrder
+  isOvertime?: Prisma.SortOrder
+  isHalfDay?: Prisma.SortOrder
+  deviceIp?: Prisma.SortOrder
+  totalHours?: Prisma.SortOrder
 }
 
 export type WorkRecordSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   overtime?: Prisma.SortOrder
+  totalHours?: Prisma.SortOrder
 }
 
 export type WorkRecordCreateNestedManyWithoutEmployeeInput = {
@@ -516,6 +610,18 @@ export type IntFieldUpdateOperationsInput = {
   divide?: number
 }
 
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
+export type FloatFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type WorkRecordCreateWithoutEmployeeInput = {
   date: Date | string
   checkIn?: Date | string | null
@@ -524,6 +630,10 @@ export type WorkRecordCreateWithoutEmployeeInput = {
   breakOut?: Date | string | null
   status: string
   overtime?: number
+  isOvertime?: boolean
+  isHalfDay?: boolean
+  deviceIp?: string | null
+  totalHours?: number
 }
 
 export type WorkRecordUncheckedCreateWithoutEmployeeInput = {
@@ -535,6 +645,10 @@ export type WorkRecordUncheckedCreateWithoutEmployeeInput = {
   breakOut?: Date | string | null
   status: string
   overtime?: number
+  isOvertime?: boolean
+  isHalfDay?: boolean
+  deviceIp?: string | null
+  totalHours?: number
 }
 
 export type WorkRecordCreateOrConnectWithoutEmployeeInput = {
@@ -576,6 +690,10 @@ export type WorkRecordScalarWhereInput = {
   breakOut?: Prisma.DateTimeNullableFilter<"WorkRecord"> | Date | string | null
   status?: Prisma.StringFilter<"WorkRecord"> | string
   overtime?: Prisma.IntFilter<"WorkRecord"> | number
+  isOvertime?: Prisma.BoolFilter<"WorkRecord"> | boolean
+  isHalfDay?: Prisma.BoolFilter<"WorkRecord"> | boolean
+  deviceIp?: Prisma.StringNullableFilter<"WorkRecord"> | string | null
+  totalHours?: Prisma.FloatFilter<"WorkRecord"> | number
 }
 
 export type WorkRecordCreateManyEmployeeInput = {
@@ -587,6 +705,10 @@ export type WorkRecordCreateManyEmployeeInput = {
   breakOut?: Date | string | null
   status: string
   overtime?: number
+  isOvertime?: boolean
+  isHalfDay?: boolean
+  deviceIp?: string | null
+  totalHours?: number
 }
 
 export type WorkRecordUpdateWithoutEmployeeInput = {
@@ -597,6 +719,10 @@ export type WorkRecordUpdateWithoutEmployeeInput = {
   breakOut?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   overtime?: Prisma.IntFieldUpdateOperationsInput | number
+  isOvertime?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isHalfDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalHours?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type WorkRecordUncheckedUpdateWithoutEmployeeInput = {
@@ -608,6 +734,10 @@ export type WorkRecordUncheckedUpdateWithoutEmployeeInput = {
   breakOut?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   overtime?: Prisma.IntFieldUpdateOperationsInput | number
+  isOvertime?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isHalfDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalHours?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type WorkRecordUncheckedUpdateManyWithoutEmployeeInput = {
@@ -619,6 +749,10 @@ export type WorkRecordUncheckedUpdateManyWithoutEmployeeInput = {
   breakOut?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   overtime?: Prisma.IntFieldUpdateOperationsInput | number
+  isOvertime?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isHalfDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalHours?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 
@@ -633,6 +767,10 @@ export type WorkRecordSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   breakOut?: boolean
   status?: boolean
   overtime?: boolean
+  isOvertime?: boolean
+  isHalfDay?: boolean
+  deviceIp?: boolean
+  totalHours?: boolean
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["workRecord"]>
 
@@ -646,6 +784,10 @@ export type WorkRecordSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   breakOut?: boolean
   status?: boolean
   overtime?: boolean
+  isOvertime?: boolean
+  isHalfDay?: boolean
+  deviceIp?: boolean
+  totalHours?: boolean
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["workRecord"]>
 
@@ -659,6 +801,10 @@ export type WorkRecordSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   breakOut?: boolean
   status?: boolean
   overtime?: boolean
+  isOvertime?: boolean
+  isHalfDay?: boolean
+  deviceIp?: boolean
+  totalHours?: boolean
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["workRecord"]>
 
@@ -672,9 +818,13 @@ export type WorkRecordSelectScalar = {
   breakOut?: boolean
   status?: boolean
   overtime?: boolean
+  isOvertime?: boolean
+  isHalfDay?: boolean
+  deviceIp?: boolean
+  totalHours?: boolean
 }
 
-export type WorkRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "employeeId" | "date" | "checkIn" | "checkOut" | "breakIn" | "breakOut" | "status" | "overtime", ExtArgs["result"]["workRecord"]>
+export type WorkRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "employeeId" | "date" | "checkIn" | "checkOut" | "breakIn" | "breakOut" | "status" | "overtime" | "isOvertime" | "isHalfDay" | "deviceIp" | "totalHours", ExtArgs["result"]["workRecord"]>
 export type WorkRecordInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
 }
@@ -700,6 +850,10 @@ export type $WorkRecordPayload<ExtArgs extends runtime.Types.Extensions.Internal
     breakOut: Date | null
     status: string
     overtime: number
+    isOvertime: boolean
+    isHalfDay: boolean
+    deviceIp: string | null
+    totalHours: number
   }, ExtArgs["result"]["workRecord"]>
   composites: {}
 }
@@ -1133,6 +1287,10 @@ export interface WorkRecordFieldRefs {
   readonly breakOut: Prisma.FieldRef<"WorkRecord", 'DateTime'>
   readonly status: Prisma.FieldRef<"WorkRecord", 'String'>
   readonly overtime: Prisma.FieldRef<"WorkRecord", 'Int'>
+  readonly isOvertime: Prisma.FieldRef<"WorkRecord", 'Boolean'>
+  readonly isHalfDay: Prisma.FieldRef<"WorkRecord", 'Boolean'>
+  readonly deviceIp: Prisma.FieldRef<"WorkRecord", 'String'>
+  readonly totalHours: Prisma.FieldRef<"WorkRecord", 'Float'>
 }
     
 

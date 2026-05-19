@@ -53,7 +53,8 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   Employee: 'Employee',
   WorkRecord: 'WorkRecord',
-  User: 'User'
+  User: 'User',
+  AttendanceSchedule: 'AttendanceSchedule'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -90,7 +91,11 @@ export const WorkRecordScalarFieldEnum = {
   breakIn: 'breakIn',
   breakOut: 'breakOut',
   status: 'status',
-  overtime: 'overtime'
+  overtime: 'overtime',
+  isOvertime: 'isOvertime',
+  isHalfDay: 'isHalfDay',
+  deviceIp: 'deviceIp',
+  totalHours: 'totalHours'
 } as const
 
 export type WorkRecordScalarFieldEnum = (typeof WorkRecordScalarFieldEnum)[keyof typeof WorkRecordScalarFieldEnum]
@@ -112,6 +117,26 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const AttendanceScheduleScalarFieldEnum = {
+  id: 'id',
+  checkInStart: 'checkInStart',
+  checkInEnd: 'checkInEnd',
+  breakInStart: 'breakInStart',
+  breakInEnd: 'breakInEnd',
+  breakOutStart: 'breakOutStart',
+  breakOutEnd: 'breakOutEnd',
+  checkOutStart: 'checkOutStart',
+  checkOutEnd: 'checkOutEnd',
+  minIntervalMinutes: 'minIntervalMinutes',
+  halfDayMinutes: 'halfDayMinutes',
+  maxPunchesPerDay: 'maxPunchesPerDay',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AttendanceScheduleScalarFieldEnum = (typeof AttendanceScheduleScalarFieldEnum)[keyof typeof AttendanceScheduleScalarFieldEnum]
 
 
 export const SortOrder = {

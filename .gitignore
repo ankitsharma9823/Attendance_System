@@ -1,0 +1,17 @@
+# Prevent node_modules in any folder or subfolder
+node_modules/
+Backend/node_modules/
+frontend/node_modules/
+
+# Prevent environment files everywhere
+.env
+.env.local
+.env.production
+Backend/.env
+frontend/.env
+
+# Prevent build files and runtime logs
+Backend/dist/
+frontend/.next/
+*.log
+Backend/.sync-state.json

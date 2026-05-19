@@ -1,253 +1,526 @@
 import prisma from "../../config/db";
 
-export interface Log {
+interface AttendancePayload {
   employeeId: string;
-  timestamp: string | Date;
-  type?: "IN" | "OUT";
+  timestamp: Date;
+  type: "IN" | "OUT" | "BREAK_IN" | "BREAK_OUT";
   deviceIp?: string;
+  isOvertime?: boolean;
+  isHalfDay?: boolean;
 }
 
-// ── All times are Nepal local (UTC+5:45) ─────────────────────────────────────
+const NEPAL_OFFSET_MS = (5 * 60 + 45) * 60 * 1000;
 
-// Check-in windows
-const CHECKIN_PRESENT_START = 10;   // 10:00 — earliest valid check-in
-const CHECKIN_PRESENT_END   = 12;   // 10:00–11:59 = PRESENT
-const CHECKIN_LATE_END      = 13;   // 12:00–12:59 = LATE
-const CHECKIN_HALFDAY_END_H = 13;   // 13:00–13:29 = HALF_DAY
-const CHECKIN_HALFDAY_END_M = 40;   // block at 13:30
-const CHECKIN_BLOCK_H       = 13;
-const CHECKIN_BLOCK_M       = 30;
-
-// Break rules
-const BREAK_ALLOWED_AFTER_H = 14;   // break only allowed after 14:00
-const BREAK_MAX_DURATION_MIN = 70;  // must return within 1hr10min or auto-checkout
-
-// Checkout window
-const CHECKOUT_START_H      = 16;   // earliest valid checkout: 16:00
-const OT_START_H            = 17;
-const OT_START_M            = 10;   // OT after 17:10
-
-const toNepalTime = (date: Date): Date => {
-  const nepalOffsetMs = (5 * 60 + 45) * 60000;
-  return new Date(date.getTime() + nepalOffsetMs);
+export const isAttendanceTestMode = (): boolean => {
+  const v = (process.env.ATTENDANCE_TEST_MODE ?? "").trim().toLowerCase();
+  return v === "true" || v === "1" || v === "yes";
 };
 
-const toNepalMinutes = (date: Date): number => {
-  const np = toNepalTime(date);
-  return np.getUTCHours() * 60 + np.getUTCMinutes();
+/** Device logs use Nepal wall-clock; normalize regardless of server timezone. */
+export const fromDeviceTime = (deviceDate: Date): Date => {
+  const y = deviceDate.getFullYear();
+  const m = deviceDate.getMonth();
+  const d = deviceDate.getDate();
+  const h = deviceDate.getHours();
+  const min = deviceDate.getMinutes();
+  const s = deviceDate.getSeconds();
+  return new Date(Date.UTC(y, m, d, h, min, s) - NEPAL_OFFSET_MS);
 };
 
-export const handleAttendance = async (log: Log): Promise<void> => {
-  const { employeeId, timestamp } = log;
+const formatDeviceClock = (deviceTime: Date) =>
+  `${deviceTime.getHours()}:${deviceTime.getMinutes().toString().padStart(2, "0")}`;
 
-  if (!timestamp || !employeeId) return;
+const isNewerThan = (next: Date, prev: Date | null | undefined) =>
+  !prev || next.getTime() > new Date(prev).getTime();
 
-  const rawTime = timestamp instanceof Date ? timestamp : new Date(timestamp);
+/** Worked hours minus break gap: (breakOut−checkIn) + (checkOut−breakIn) */
+const calcHoursWithBreak = (
+  checkIn: Date,
+  breakOut: Date,
+  breakIn: Date,
+  checkOut: Date,
+): number => {
+  const morning = breakOut.getTime() - checkIn.getTime();
+  const afternoon = checkOut.getTime() - breakIn.getTime();
+  const total = Math.max(0, morning) + Math.max(0, afternoon);
+  return parseFloat((total / (1000 * 60 * 60)).toFixed(2));
+};
 
-  if (isNaN(rawTime.getTime())) {
-    console.error(`❌ Invalid timestamp for employee ${employeeId}: ${timestamp}`);
-    return;
+/**
+ * Test mode (ATTENDANCE_TEST_MODE=true): 4 punches per day
+ * 1 → check-in (e.g. 7:30)
+ * 2 → break-out / left for break (e.g. 7:33)
+ * 3 → break-in / back from break (e.g. 7:35)
+ * 4 → check-out (e.g. 7:37)
+ */
+const handleTestModePunches = async (
+  employeeId: string,
+  localTime: Date,
+  deviceWallClock: Date,
+  startOfDay: Date,
+  deviceIp: string | undefined,
+  existing: Awaited<ReturnType<typeof prisma.workRecord.findUnique>>,
+): Promise<boolean> => {
+  const clock = formatDeviceClock(deviceWallClock);
+
+  if (!existing) {
+    await prisma.workRecord.create({
+      data: {
+        employeeId,
+        date: startOfDay,
+        checkIn: localTime,
+        status: "PRESENT",
+        deviceIp,
+      },
+    });
+    console.log(`[Engine] Emp ${employeeId} punch 1/4 — Check-in at ${clock}`);
+    return true;
   }
 
-  // Nepal time for logic only — never stored in DB
-  const logTime    = toNepalTime(rawTime);
-  const hour       = logTime.getUTCHours();
-  const minute     = logTime.getUTCMinutes();
-  const totalMins  = hour * 60 + minute; // Nepal minutes since midnight
-  const dbTime     = rawTime;            // always store original UTC
+  const checkIn = existing.checkIn ? new Date(existing.checkIn) : null;
+  const breakOut = existing.breakOut ? new Date(existing.breakOut) : null;
+  const breakIn = existing.breakIn ? new Date(existing.breakIn) : null;
+  const checkOut = existing.checkOut ? new Date(existing.checkOut) : null;
 
-  // Nepal calendar date as UTC midnight
-  const logDate = new Date(Date.UTC(
-    logTime.getUTCFullYear(),
-    logTime.getUTCMonth(),
-    logTime.getUTCDate(),
-    0, 0, 0, 0
-  ));
+  if (!breakOut && checkIn && isNewerThan(localTime, checkIn)) {
+    await prisma.workRecord.update({
+      where: { id: existing.id },
+      data: { breakOut: localTime },
+    });
+    console.log(`[Engine] Emp ${employeeId} punch 2/4 — Break-out (left for break) at ${clock}`);
+    return true;
+  }
 
-  console.log(
-    `[Attendance] Processing: emp=${employeeId} nepal_time=${logTime.toISOString()} hour=${hour}:${String(minute).padStart(2,"0")} date=${logDate.toISOString().slice(0, 10)}`
+  if (breakOut && !breakIn && isNewerThan(localTime, breakOut)) {
+    await prisma.workRecord.update({
+      where: { id: existing.id },
+      data: { breakIn: localTime },
+    });
+    console.log(`[Engine] Emp ${employeeId} punch 3/4 — Break-in (back from break) at ${clock}`);
+    return true;
+  }
+
+  if (breakIn && checkIn && breakOut && isNewerThan(localTime, breakIn)) {
+    const totalHours = calcHoursWithBreak(checkIn, breakOut, breakIn, localTime);
+    await prisma.workRecord.update({
+      where: { id: existing.id },
+      data: {
+        checkOut: localTime,
+        totalHours,
+      },
+    });
+    console.log(
+      `[Engine] Emp ${employeeId} punch 4/4 — Check-out at ${clock} (${totalHours}h worked, break excluded)`,
+    );
+    return true;
+  }
+
+  if (checkOut && isNewerThan(localTime, checkOut)) {
+    const totalHours =
+      checkIn && breakOut && breakIn
+        ? calcHoursWithBreak(checkIn, breakOut, breakIn, localTime)
+        : existing.totalHours;
+    await prisma.workRecord.update({
+      where: { id: existing.id },
+      data: { checkOut: localTime, totalHours },
+    });
+    console.log(`[Engine] Emp ${employeeId} — Check-out updated at ${clock}`);
+    return true;
+  }
+
+  console.log(`[Engine] Skipped Emp ${employeeId} at ${clock} — duplicate or out-of-order punch`);
+  return false;
+};
+
+/** Production: check-in → check-out */
+const handleStandardPunches = async (
+  employeeId: string,
+  localTime: Date,
+  startOfDay: Date,
+  deviceIp: string | undefined,
+  record: NonNullable<Awaited<ReturnType<typeof prisma.workRecord.findUnique>>>,
+  isOvertime?: boolean,
+  isHalfDay?: boolean,
+): Promise<boolean> => {
+  const hours = localTime.getHours();
+  const minutes = localTime.getMinutes();
+  const totalMinutesPastMidnight = hours * 60 + minutes;
+
+  const SHIFT_START_MINUTES = 10 * 60;
+  const GRACE_PERIOD_MINUTES = 15;
+  const LATE_LIMIT_MINUTES = 12 * 60;
+  const MAX_CHECKIN_MINUTES = 13 * 60 + 30;
+
+  const checkInTime = record.checkIn ? new Date(record.checkIn) : null;
+  const checkOutTime = record.checkOut ? new Date(record.checkOut) : null;
+
+  if (checkInTime && localTime.getTime() <= checkInTime.getTime()) {
+    console.log(`[Engine] Skipped Emp ${employeeId} — duplicate or older than check-in.`);
+    return false;
+  }
+
+  if (!checkOutTime) {
+    let computedHours = 0;
+    if (checkInTime) {
+      computedHours = parseFloat(
+        ((localTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60)).toFixed(2),
+      );
+    }
+
+    await prisma.workRecord.update({
+      where: { id: record.id },
+      data: { checkOut: localTime, totalHours: computedHours > 0 ? computedHours : 0 },
+    });
+    console.log(`[Engine] Clock-Out saved for Emp ${employeeId} at ${hours}:${minutes} (${computedHours}h)`);
+    return true;
+  }
+
+  if (localTime.getTime() <= checkOutTime.getTime()) {
+    console.log(`[Engine] Skipped Emp ${employeeId} — duplicate or older than check-out.`);
+    return false;
+  }
+
+  const computedHours = checkInTime
+    ? parseFloat(((localTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60)).toFixed(2))
+    : 0;
+
+  await prisma.workRecord.update({
+    where: { id: record.id },
+    data: { 
+      checkOut: localTime, 
+      totalHours: computedHours > 0 ? computedHours : record.totalHours ?? 0,
+      isOvertime: isOvertime ?? record.isOvertime,
+      isHalfDay: isHalfDay ?? record.isHalfDay,
+    },
+  });
+  console.log(`[Engine] Check-out updated for Emp ${employeeId} at ${hours}:${minutes}`);
+  return true;
+};
+
+export const handleAttendance = async (payload: AttendancePayload): Promise<boolean> => {
+  const { employeeId, timestamp, deviceIp, isOvertime, isHalfDay } = payload;
+
+  const localTime = fromDeviceTime(timestamp);
+  const startOfDay = fromDeviceTime(
+    new Date(timestamp.getFullYear(), timestamp.getMonth(), timestamp.getDate(), 0, 0, 0),
   );
 
-  // ── Employee lookup / auto-create ─────────────────────────────────────────
-  let employee = await prisma.employee.findUnique({ where: { id: employeeId } });
+  const hours = timestamp.getHours();
+  const minutes = timestamp.getMinutes();
+  const totalMinutesPastMidnight = hours * 60 + minutes;
+  const testMode = isAttendanceTestMode();
 
-  if (!employee) {
-    console.warn(`⚠️  Employee ${employeeId} not in DB — auto-creating.`);
-    try {
-      employee = await prisma.employee.create({
-        data: { id: employeeId, name: `Employee ${employeeId}`, department: null },
-      });
-    } catch (createErr: any) {
-      employee = await prisma.employee.findUnique({ where: { id: employeeId } });
-      if (!employee) {
-        console.error(`❌ Could not create employee ${employeeId}:`, createErr?.message);
-        return;
-      }
-    }
-  }
-
-  const record = await prisma.workRecord.findUnique({
-    where: { employeeId_date: { employeeId, date: logDate } },
+  let record = await prisma.workRecord.findUnique({
+    where: { employeeId_date: { employeeId, date: startOfDay } },
   });
 
-  // ── Already fully checked out ─────────────────────────────────────────────
-  if (record?.checkOut) {
-    console.log(`[Attendance] Already checked out for ${employeeId} — skipping.`);
-    return;
+  if (testMode) {
+    return handleTestModePunches(employeeId, localTime, timestamp, startOfDay, deviceIp, record);
   }
 
-  // ── STAGE 1: No record yet — this is a check-in ───────────────────────────
   if (!record) {
-    // Too early — before 10:00
-    if (hour < CHECKIN_PRESENT_START) {
-      console.log(`🚫 Too early to check in for ${employeeId} at ${hour}:${String(minute).padStart(2,"0")}`);
-      return;
+    if (totalMinutesPastMidnight > 13 * 60 + 30) {
+      console.log(`[Engine] Check-in denied for Emp ${employeeId} after 13:30.`);
+      return false;
     }
 
-    // Blocked — after 13:30
-    const blockMins = CHECKIN_BLOCK_H * 60 + CHECKIN_BLOCK_M;
-    if (totalMins >= blockMins) {
-      console.log(`🚫 Check-in blocked for ${employeeId} at ${hour}:${String(minute).padStart(2,"0")} (after 13:30)`);
-      return;
-    }
-
-    // Determine status by check-in time
-    let status: string;
-    if (hour < CHECKIN_PRESENT_END) {
-      status = "PRESENT";                          // 10:00–11:59
-    } else if (hour < CHECKIN_LATE_END) {
-      status = "LATE";                             // 12:00–12:59
-    } else {
-      status = "HALF_DAY";                         // 13:00–13:29
+    let status = "PRESENT";
+    if (totalMinutesPastMidnight > 10 * 60 + 15) {
+      status = totalMinutesPastMidnight <= 12 * 60 ? "LATE" : "HALF_DAY";
     }
 
     await prisma.workRecord.create({
-      data: { employeeId, date: logDate, status, checkIn: dbTime, overtime: 0 },
+      data: {
+        employeeId,
+        date: startOfDay,
+        checkIn: localTime,
+        status,
+        deviceIp,
+        isOvertime: isOvertime ?? false,
+        isHalfDay: isHalfDay ?? false,
+      },
     });
-
-    console.log(`✅ Check-in recorded for ${employeeId} at ${hour}:${String(minute).padStart(2,"0")} — ${status}`);
-    return;
+    console.log(`[Engine] Clock-In saved for Emp ${employeeId} at ${hours}:${minutes} [${status}]`);
+    return true;
   }
 
-  // ── Duplicate scan guard ──────────────────────────────────────────────────
-  // Ignore exact or near-duplicate punches (within 2 min of any recorded time)
-  if (record.checkIn) {
-    const nepalCheckIn = toNepalTime(new Date(record.checkIn));
-    const minutesSinceCheckIn = (logTime.getTime() - nepalCheckIn.getTime()) / 60000;
-
-    // Ignore only if punch is VERY close to check-in (within 2 min) — likely duplicate
-    if (minutesSinceCheckIn >= 0 && minutesSinceCheckIn < 2) {
-      console.log(
-        `⏭️  Duplicate check-in ignored for ${employeeId} (${Math.floor(minutesSinceCheckIn)}min since check-in)`
-      );
-      return;
-    }
-  }
-
-  // Also check near break-out/break-in for duplicates
-  if (record.breakOut) {
-    const nepalBreakOut = toNepalTime(new Date(record.breakOut));
-    const minutesSinceBreakOut = (logTime.getTime() - nepalBreakOut.getTime()) / 60000;
-
-    if (minutesSinceBreakOut >= 0 && minutesSinceBreakOut < 2) {
-      console.log(`⏭️  Duplicate break-out ignored for ${employeeId}`);
-      return;
-    }
-  }
-
-  if (record.breakIn) {
-    const nepalBreakIn = toNepalTime(new Date(record.breakIn));
-    const minutesSinceBreakIn = (logTime.getTime() - nepalBreakIn.getTime()) / 60000;
-
-    if (minutesSinceBreakIn >= 0 && minutesSinceBreakIn < 2) {
-      console.log(`⏭️  Duplicate break-in ignored for ${employeeId}`);
-      return;
-    }
-  }
-
-  if (record.checkOut) {
-    const nepalCheckOut = toNepalTime(new Date(record.checkOut));
-    const minutesSinceCheckOut = (logTime.getTime() - nepalCheckOut.getTime()) / 60000;
-
-    if (minutesSinceCheckOut >= 0 && minutesSinceCheckOut < 2) {
-      console.log(`⏭️  Duplicate checkout ignored for ${employeeId}`);
-      return;
-    }
-  }
-
-  let updateData: any  = {};
-  let finalStatus      = record.status ?? "PRESENT";
-
-  // ── STAGE 2: Break logic (only allowed after 14:00) ───────────────────────
-  if (totalMins >= BREAK_ALLOWED_AFTER_H * 60) {
-
-    // No break started yet — start break
-    if (!record.breakOut) {
-      updateData.breakOut = dbTime;
-      console.log(`☕ Break started for ${employeeId} at ${hour}:${String(minute).padStart(2,"0")}`);
-
-    // Break started but not returned yet — this is break return
-    } else if (!record.breakIn) {
-      const breakStartNepal  = toNepalTime(new Date(record.breakOut));
-      const breakDurationMin = (logTime.getTime() - breakStartNepal.getTime()) / 60000;
-
-      if (breakDurationMin > BREAK_MAX_DURATION_MIN) {
-        // Overstayed break — treat as checkout
-        updateData.breakIn  = dbTime;
-        updateData.checkOut = dbTime;
-        finalStatus         = "EARLY_LEAVE";
-        console.log(
-          `⚠️  Break overstayed ${Math.floor(breakDurationMin)}min for ${employeeId} — auto checkout`
-        );
-      } else {
-        updateData.breakIn = dbTime;
-        console.log(`🔙 Break ended for ${employeeId} (${Math.floor(breakDurationMin)}min break)`);
-      }
-
-    // Break already done — this is checkout
-    } else {
-      if (totalMins < CHECKOUT_START_H * 60) {
-        // Trying to checkout before 16:00 after break — early leave
-        updateData.checkOut = dbTime;
-        finalStatus         = "EARLY_LEAVE";
-        console.log(`⚠️  Early leave (post-break) for ${employeeId} at ${hour}:${String(minute).padStart(2,"0")}`);
-      } else {
-        updateData.checkOut = dbTime;
-
-        // OT calculation
-        const otStartMins = OT_START_H * 60 + OT_START_M;
-        if (totalMins > otStartMins) {
-          updateData.overtime = totalMins - otStartMins;
-          console.log(`⏱️  OT ${updateData.overtime}min for ${employeeId}`);
-        }
-
-        console.log(`🚪 Checkout for ${employeeId} at ${hour}:${String(minute).padStart(2,"0")}`);
-      }
-    }
-
-  // ── STAGE 3: Checkout window (16:00+) no break taken ─────────────────────
-  } else if (totalMins >= CHECKOUT_START_H * 60) {
-    updateData.checkOut = dbTime;
-
-    const otStartMins = OT_START_H * 60 + OT_START_M;
-    if (totalMins > otStartMins) {
-      updateData.overtime = totalMins - otStartMins;
-      console.log(`⏱️  OT ${updateData.overtime}min for ${employeeId}`);
-    }
-
-    console.log(`🚪 Checkout for ${employeeId} at ${hour}:${String(minute).padStart(2,"0")}`);
-
-  // ── STAGE 4: Punch between check-in and 14:00 — early leave ──────────────
-  } else {
-    updateData.checkOut = dbTime;
-    finalStatus         = "EARLY_LEAVE";
-    console.log(`⚠️  Early leave for ${employeeId} at ${hour}:${String(minute).padStart(2,"0")}`);
-  }
-
-  if (Object.keys(updateData).length > 0) {
-    await prisma.workRecord.update({
-      where: { id: record.id },
-      data: { ...updateData, status: finalStatus },
-    });
-  }
+  return handleStandardPunches(employeeId, localTime, startOfDay, deviceIp, record, isOvertime, isHalfDay);
 };
+
+// import prisma from "../../config/db";
+// import type { PunchKind } from "../../services/schedule.service";
+
+// interface AttendancePayload {
+//   employeeId: string;
+//   timestamp: Date;
+//   type: "IN" | "OUT";       // raw from ZKTeco device
+//   deviceIp?: string;
+//   isOvertime?: boolean;
+//   isHalfDay?: boolean;
+//   kind?: PunchKind;          // resolved by validatePunch in schedule.service
+// }
+
+// const NEPAL_OFFSET_MS = (5 * 60 + 45) * 60 * 1000;
+
+// export const isAttendanceTestMode = (): boolean => {
+//   const v = (process.env.ATTENDANCE_TEST_MODE ?? "").trim().toLowerCase();
+//   return v === "true" || v === "1" || v === "yes";
+// };
+
+// /** Device logs store Nepal wall-clock time. Convert to UTC for DB storage. */
+// export const fromDeviceTime = (deviceDate: Date): Date => {
+//   return new Date(
+//     Date.UTC(
+//       deviceDate.getFullYear(),
+//       deviceDate.getMonth(),
+//       deviceDate.getDate(),
+//       deviceDate.getHours(),
+//       deviceDate.getMinutes(),
+//       deviceDate.getSeconds(),
+//     ) - NEPAL_OFFSET_MS,
+//   );
+// };
+
+// const fmtClock = (d: Date) =>
+//   `${d.getHours()}:${d.getMinutes().toString().padStart(2, "0")}`;
+
+// const isNewer = (next: Date, prev: Date | null | undefined) =>
+//   !prev || next.getTime() > new Date(prev).getTime();
+
+// /** Worked hours excluding break: (breakOut−checkIn) + (checkOut−breakIn) */
+// const calcHours = (
+//   checkIn: Date,
+//   breakOut: Date | null,
+//   breakIn: Date | null,
+//   checkOut: Date,
+// ): number => {
+//   if (breakOut && breakIn) {
+//     const morning   = breakOut.getTime() - checkIn.getTime();
+//     const afternoon = checkOut.getTime() - breakIn.getTime();
+//     return parseFloat(((Math.max(0, morning) + Math.max(0, afternoon)) / 3_600_000).toFixed(2));
+//   }
+//   return parseFloat(((checkOut.getTime() - checkIn.getTime()) / 3_600_000).toFixed(2));
+// };
+
+// // ─────────────────────────────────────────────────────────────
+// //  TEST MODE  (ATTENDANCE_TEST_MODE=true)
+// //  Accepts 4 punches in sequence regardless of time windows:
+// //  1 → check-in   2 → break-out   3 → break-in   4 → check-out
+// // ─────────────────────────────────────────────────────────────
+// const handleTestMode = async (
+//   employeeId: string,
+//   localTime: Date,
+//   deviceWallClock: Date,
+//   startOfDay: Date,
+//   deviceIp: string | undefined,
+//   record: Awaited<ReturnType<typeof prisma.workRecord.findUnique>>,
+// ): Promise<boolean> => {
+//   const clock = fmtClock(deviceWallClock);
+
+//   if (!record) {
+//     await prisma.workRecord.create({
+//       data: { employeeId, date: startOfDay, checkIn: localTime, status: "PRESENT", deviceIp },
+//     });
+//     console.log(`[Engine][TEST] ${employeeId} — CHECK-IN at ${clock}`);
+//     return true;
+//   }
+
+//   const ci  = record.checkIn  ? new Date(record.checkIn)  : null;
+//   const bo  = record.breakOut ? new Date(record.breakOut) : null;
+//   const bi  = record.breakIn  ? new Date(record.breakIn)  : null;
+//   const co  = record.checkOut ? new Date(record.checkOut) : null;
+
+//   if (!bo && ci && isNewer(localTime, ci)) {
+//     await prisma.workRecord.update({ where: { id: record.id }, data: { breakOut: localTime } });
+//     console.log(`[Engine][TEST] ${employeeId} — BREAK-OUT at ${clock}`);
+//     return true;
+//   }
+//   if (bo && !bi && isNewer(localTime, bo)) {
+//     await prisma.workRecord.update({ where: { id: record.id }, data: { breakIn: localTime } });
+//     console.log(`[Engine][TEST] ${employeeId} — BREAK-IN at ${clock}`);
+//     return true;
+//   }
+//   if (bi && ci && bo && isNewer(localTime, bi)) {
+//     const totalHours = calcHours(ci, bo, bi, localTime);
+//     await prisma.workRecord.update({
+//       where: { id: record.id },
+//       data: { checkOut: localTime, totalHours },
+//     });
+//     console.log(`[Engine][TEST] ${employeeId} — CHECK-OUT at ${clock} (${totalHours}h)`);
+//     return true;
+//   }
+//   if (co && isNewer(localTime, co)) {
+//     const totalHours = ci && bo && bi ? calcHours(ci, bo, bi, localTime) : record.totalHours;
+//     await prisma.workRecord.update({
+//       where: { id: record.id },
+//       data: { checkOut: localTime, totalHours: totalHours ?? 0 },
+//     });
+//     console.log(`[Engine][TEST] ${employeeId} — CHECK-OUT updated at ${clock}`);
+//     return true;
+//   }
+
+//   console.log(`[Engine][TEST] ${employeeId} — skipped duplicate at ${clock}`);
+//   return false;
+// };
+
+// // ─────────────────────────────────────────────────────────────
+// //  PRODUCTION MODE
+// //  Uses the validated PunchKind from schedule.service to decide
+// //  which field to write. One punch per slot, sequence enforced.
+// // ─────────────────────────────────────────────────────────────
+// export const handleAttendance = async (payload: AttendancePayload): Promise<boolean> => {
+//   const { employeeId, timestamp, deviceIp, isOvertime, isHalfDay, kind } = payload;
+
+//   const localTime  = fromDeviceTime(timestamp);
+//   const startOfDay = fromDeviceTime(
+//     new Date(timestamp.getFullYear(), timestamp.getMonth(), timestamp.getDate(), 0, 0, 0),
+//   );
+//   const clock = fmtClock(timestamp); // Nepal wall clock for logs
+
+//   const record = await prisma.workRecord.findUnique({
+//     where: { employeeId_date: { employeeId, date: startOfDay } },
+//   });
+
+//   // ── TEST MODE ────────────────────────────────────────────
+//   if (isAttendanceTestMode()) {
+//     return handleTestMode(employeeId, localTime, timestamp, startOfDay, deviceIp, record);
+//   }
+
+//   // ── PRODUCTION MODE ──────────────────────────────────────
+//   // kind is resolved by validatePunch — if missing fall back to legacy IN/OUT logic
+//   switch (kind) {
+//     // ── CHECK-IN ──────────────────────────────────────────
+//     case "CHECK_IN": {
+//       if (record) {
+//         console.log(`[Engine] ${employeeId} — check-in already exists, skipping.`);
+//         return false;
+//       }
+
+//       const h   = timestamp.getHours();
+//       const m   = timestamp.getMinutes();
+//       const tot = h * 60 + m;
+//       let status = "PRESENT";
+//       if (tot > 10 * 60 + 15) status = tot <= 12 * 60 ? "LATE" : "HALF_DAY";
+
+//       await prisma.workRecord.create({
+//         data: {
+//           employeeId,
+//           date: startOfDay,
+//           checkIn: localTime,
+//           status,
+//           deviceIp,
+//           isOvertime: isOvertime ?? false,
+//           isHalfDay:  isHalfDay  ?? false,
+//         },
+//       });
+//       console.log(`[Engine] ${employeeId} — CHECK-IN at ${clock} [${status}]${isOvertime ? " +OT" : ""}`);
+//       return true;
+//     }
+
+//     // ── BREAK-OUT (left for break) ─────────────────────────
+//     case "BREAK_OUT": {
+//       if (!record) {
+//         console.log(`[Engine] ${employeeId} — no check-in found, skipping break-out.`);
+//         return false;
+//       }
+//       if (record.breakOut) {
+//         console.log(`[Engine] ${employeeId} — break-out already recorded, skipping.`);
+//         return false;
+//       }
+//       await prisma.workRecord.update({
+//         where: { id: record.id },
+//         data: { breakOut: localTime },
+//       });
+//       console.log(`[Engine] ${employeeId} — BREAK-OUT at ${clock}`);
+//       return true;
+//     }
+
+//     // ── BREAK-IN (returned from break) ────────────────────
+//     case "BREAK_IN": {
+//       if (!record?.breakOut) {
+//         console.log(`[Engine] ${employeeId} — no break-out found, skipping break-in.`);
+//         return false;
+//       }
+//       if (record.breakIn) {
+//         console.log(`[Engine] ${employeeId} — break-in already recorded, skipping.`);
+//         return false;
+//       }
+//       await prisma.workRecord.update({
+//         where: { id: record.id },
+//         data: { breakIn: localTime },
+//       });
+//       console.log(`[Engine] ${employeeId} — BREAK-IN at ${clock}`);
+//       return true;
+//     }
+
+//     // ── CHECK-OUT ─────────────────────────────────────────
+//     case "CHECK_OUT": {
+//       if (!record?.checkIn) {
+//         console.log(`[Engine] ${employeeId} — no check-in found, skipping check-out.`);
+//         return false;
+//       }
+//       if (record.checkOut && !isNewer(localTime, record.checkOut)) {
+//         console.log(`[Engine] ${employeeId} — duplicate check-out, skipping.`);
+//         return false;
+//       }
+
+//       const ci = new Date(record.checkIn);
+//       const bo = record.breakOut ? new Date(record.breakOut) : null;
+//       const bi = record.breakIn  ? new Date(record.breakIn)  : null;
+//       const totalHours = calcHours(ci, bo, bi, localTime);
+
+//       await prisma.workRecord.update({
+//         where: { id: record.id },
+//         data: {
+//           checkOut: localTime,
+//           totalHours,
+//           isOvertime: isOvertime ?? record.isOvertime,
+//           isHalfDay:  isHalfDay  ?? record.isHalfDay,
+//         },
+//       });
+//       console.log(
+//         `[Engine] ${employeeId} — CHECK-OUT at ${clock} (${totalHours}h)${isOvertime ? " +OT" : ""}${isHalfDay ? " HALF-DAY" : ""}`,
+//       );
+//       return true;
+//     }
+
+//     // ── FALLBACK (no kind — legacy IN/OUT from device) ────
+//     default: {
+//       if (!record) {
+//         const h   = timestamp.getHours();
+//         const m   = timestamp.getMinutes();
+//         const tot = h * 60 + m;
+//         if (tot > 13 * 60 + 30) {
+//           console.log(`[Engine] ${employeeId} — check-in denied after 13:30.`);
+//           return false;
+//         }
+//         let status = "PRESENT";
+//         if (tot > 10 * 60 + 15) status = tot <= 12 * 60 ? "LATE" : "HALF_DAY";
+
+//         await prisma.workRecord.create({
+//           data: { employeeId, date: startOfDay, checkIn: localTime, status, deviceIp },
+//         });
+//         console.log(`[Engine] ${employeeId} — CHECK-IN (fallback) at ${clock} [${status}]`);
+//         return true;
+//       }
+
+//       // Existing record — treat as check-out update
+//       if (!isNewer(localTime, record.checkOut ?? record.checkIn)) {
+//         console.log(`[Engine] ${employeeId} — duplicate punch (fallback), skipping.`);
+//         return false;
+//       }
+
+//       const ci = record.checkIn ? new Date(record.checkIn) : null;
+//       const bo = record.breakOut ? new Date(record.breakOut) : null;
+//       const bi = record.breakIn  ? new Date(record.breakIn)  : null;
+//       const totalHours = ci ? calcHours(ci, bo, bi, localTime) : 0;
+
+//       await prisma.workRecord.update({
+//         where: { id: record.id },
+//         data: { checkOut: localTime, totalHours },
+//       });
+//       console.log(`[Engine] ${employeeId} — CHECK-OUT (fallback) at ${clock} (${totalHours}h)`);
+//       return true;
+//     }
+//   }
+// };

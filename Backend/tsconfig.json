@@ -15,5 +15,5 @@
 
     "types": ["node"]
   },
-  "include": ["src", "prisma"] // Added prisma folder here
+  "include": ["src", "prisma","zklib-js.d.ts"] // Added prisma folder here
 }

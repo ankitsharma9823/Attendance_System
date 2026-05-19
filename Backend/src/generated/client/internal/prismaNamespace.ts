@@ -386,7 +386,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   Employee: 'Employee',
   WorkRecord: 'WorkRecord',
-  User: 'User'
+  User: 'User',
+  AttendanceSchedule: 'AttendanceSchedule'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -402,7 +403,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "employee" | "workRecord" | "user"
+    modelProps: "employee" | "workRecord" | "user" | "attendanceSchedule"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -628,6 +629,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AttendanceSchedule: {
+      payload: Prisma.$AttendanceSchedulePayload<ExtArgs>
+      fields: Prisma.AttendanceScheduleFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AttendanceScheduleFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttendanceSchedulePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AttendanceScheduleFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttendanceSchedulePayload>
+        }
+        findFirst: {
+          args: Prisma.AttendanceScheduleFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttendanceSchedulePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AttendanceScheduleFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttendanceSchedulePayload>
+        }
+        findMany: {
+          args: Prisma.AttendanceScheduleFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttendanceSchedulePayload>[]
+        }
+        create: {
+          args: Prisma.AttendanceScheduleCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttendanceSchedulePayload>
+        }
+        createMany: {
+          args: Prisma.AttendanceScheduleCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AttendanceScheduleCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttendanceSchedulePayload>[]
+        }
+        delete: {
+          args: Prisma.AttendanceScheduleDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttendanceSchedulePayload>
+        }
+        update: {
+          args: Prisma.AttendanceScheduleUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttendanceSchedulePayload>
+        }
+        deleteMany: {
+          args: Prisma.AttendanceScheduleDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AttendanceScheduleUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AttendanceScheduleUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttendanceSchedulePayload>[]
+        }
+        upsert: {
+          args: Prisma.AttendanceScheduleUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AttendanceSchedulePayload>
+        }
+        aggregate: {
+          args: Prisma.AttendanceScheduleAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAttendanceSchedule>
+        }
+        groupBy: {
+          args: Prisma.AttendanceScheduleGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AttendanceScheduleGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AttendanceScheduleCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AttendanceScheduleCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -685,7 +760,11 @@ export const WorkRecordScalarFieldEnum = {
   breakIn: 'breakIn',
   breakOut: 'breakOut',
   status: 'status',
-  overtime: 'overtime'
+  overtime: 'overtime',
+  isOvertime: 'isOvertime',
+  isHalfDay: 'isHalfDay',
+  deviceIp: 'deviceIp',
+  totalHours: 'totalHours'
 } as const
 
 export type WorkRecordScalarFieldEnum = (typeof WorkRecordScalarFieldEnum)[keyof typeof WorkRecordScalarFieldEnum]
@@ -707,6 +786,26 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const AttendanceScheduleScalarFieldEnum = {
+  id: 'id',
+  checkInStart: 'checkInStart',
+  checkInEnd: 'checkInEnd',
+  breakInStart: 'breakInStart',
+  breakInEnd: 'breakInEnd',
+  breakOutStart: 'breakOutStart',
+  breakOutEnd: 'breakOutEnd',
+  checkOutStart: 'checkOutStart',
+  checkOutEnd: 'checkOutEnd',
+  minIntervalMinutes: 'minIntervalMinutes',
+  halfDayMinutes: 'halfDayMinutes',
+  maxPunchesPerDay: 'maxPunchesPerDay',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AttendanceScheduleScalarFieldEnum = (typeof AttendanceScheduleScalarFieldEnum)[keyof typeof AttendanceScheduleScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -914,6 +1013,7 @@ export type GlobalOmitConfig = {
   employee?: Prisma.EmployeeOmit
   workRecord?: Prisma.WorkRecordOmit
   user?: Prisma.UserOmit
+  attendanceSchedule?: Prisma.AttendanceScheduleOmit
 }
 
 /* Types for Logging */

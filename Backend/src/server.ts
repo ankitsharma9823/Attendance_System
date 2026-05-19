@@ -1,18 +1,70 @@
+import "dotenv/config";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import app from "./app";
+import { setDeviceTime, syncEmployeesFromDevice, syncWithMachine } from "./modules/device/device.engine";
+import { DEVICE_CONFIG } from "./config/device.config";
 
 const PORT = process.env.PORT || 5000;
+const DEVICE_STARTUP_SYNC = process.env.DEVICE_STARTUP_SYNC === "true";
 
-app.listen(PORT, () => {
-  console.log(`🌐 Backend running on port ${PORT}`);
-});
+// Helper function to pause execution and let sockets clear
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// FIX: Removed the test() call that was accidentally left in production code
-setTimeout(async () => {
+const runDeviceStartup = async () => {
   try {
-    console.log("🚀 Initializing fingerprint sync...");
-    const { startMachineSync } = await import("./modules/machine/machine.engine");
-    await startMachineSync();
-  } catch (err) {
-    console.error("❌ Startup sync failed:", err);
+    console.log("[Device Engine] Starting sequential hardware initialization sequence...");
+
+    // 1. Sync Clock
+    await setDeviceTime();
+    console.log("[Device Engine] Step 1/3: Device clock synced successfully.");
+    
+    // ⏳ Allow socket thread 3 seconds to breathe
+    await delay(3000);
+
+    // 2. Pull Employees
+    console.log("[Device Engine] Step 2/3: Launching employee profile registry sync...");
+    await syncEmployeesFromDevice();
+    
+    // ⏳ Allow socket thread another 3 seconds to breathe
+    await delay(3000);
+
+    // 3. Pull Logs
+    console.log("[Device Engine] Step 3/3: Fetching historical attendance logs...");
+    const result = await syncWithMachine();
+    console.log("[Device Engine] Sequential boot-up sync completed successfully:", result);
+
+  } catch (err: any) {
+    console.warn("[Device Engine] Startup sequence optimization warning:", err?.message ?? err);
   }
-}, 0);
+};
+
+const startServer = () => {
+  app.listen(PORT, async () => {
+    console.log(`Production Core Engine Online on Port ${PORT}`);
+    console.log(`Target Device Configuration: ${DEVICE_CONFIG.IP}:${DEVICE_CONFIG.PORT}`);
+
+    if (DEVICE_STARTUP_SYNC) {
+      // Execute sequentially right after server boot
+      await runDeviceStartup();
+    } else {
+      console.log("[Device] Startup sync disabled (DEVICE_STARTUP_SYNC=false). Use POST /api/device/sync.");
+    }
+
+    const autoSync = process.env.DEVICE_AUTO_SYNC === "true";
+    if (autoSync) {
+      console.log(`[System Scheduler] Auto-sync scheduled every ${DEVICE_CONFIG.INTERVAL / 1000}s.`);
+      
+      setInterval(() => {
+        syncWithMachine().catch((err) => {
+          console.warn("[System Scheduler] Sync skipped:", err?.message ?? err);
+        });
+      }, DEVICE_CONFIG.INTERVAL);
+    } else {
+      console.log("[System Scheduler] Auto-sync OFF — manual engine trigger required.");
+    }
+  });
+};
+
+startServer();

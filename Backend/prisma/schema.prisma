@@ -6,6 +6,7 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
 model Employee {
   id         String       @id
   name       String
@@ -14,7 +15,7 @@ model Employee {
 }
 
 model WorkRecord {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   employeeId String
   date       DateTime
   checkIn    DateTime?
@@ -22,14 +23,18 @@ model WorkRecord {
   breakIn    DateTime?
   breakOut   DateTime?
   status     String
-  overtime   Int        @default(0)
+  overtime   Int       @default(0)
+  isOvertime Boolean   @default(false)
+  isHalfDay  Boolean   @default(false)
+  deviceIp   String?
+  totalHours Float     @default(0.0)
+  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  employee   Employee @relation(fields: [employeeId], references: [id])
   @@unique([employeeId, date])
   @@index([employeeId, checkIn])
 }
 
-model User{
+model User {
   id                      Int       @id @default(autoincrement())
   username                String    @unique
   email                   String    @unique
@@ -42,4 +47,21 @@ model User{
   passwordResetExpiry     DateTime?
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
+}
+
+model AttendanceSchedule {
+  id                  Int      @id @default(1)
+  checkInStart        String
+  checkInEnd          String
+  breakInStart        String
+  breakInEnd          String
+  breakOutStart       String
+  breakOutEnd         String
+  checkOutStart       String
+  checkOutEnd         String
+  minIntervalMinutes  Int      @default(5)
+  halfDayMinutes      Int      @default(240)
+  maxPunchesPerDay    Int      @default(4)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
