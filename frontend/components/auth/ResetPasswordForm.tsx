@@ -2,8 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useForm } from 'react-hook-form';
 import { authService } from '@/services/auth-service';
 import { toast } from 'sonner';
+import { Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+
+interface ResetPasswordInputs {
+  newPassword:  string;
+  confirmPassword:  string;
+}
 
 export const ResetPasswordForm: React.FC = () => {
   const router = useRouter();
@@ -11,46 +18,28 @@ export const ResetPasswordForm: React.FC = () => {
   const token = searchParams.get('token') || '';
 
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    newPassword: '',
-    confirmPassword: '',
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+    setError,
+  } = useForm<ResetPasswordInputs>({
+    defaultValues: {
+      newPassword: '',
+      confirmPassword: '',
+    },
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  const newPasswordValue = watch('newPassword');
 
-    if (!formData.newPassword) {
-      newErrors.newPassword = 'Password is required';
-    } else if (formData.newPassword.length < 6) {
-      newErrors.newPassword = 'Password must be at least 6 characters';
-    }
-
-    if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
+  const onSubmit = async (data: ResetPasswordInputs) => {
     if (!token) {
-      setErrors({ submit: 'Invalid reset link' });
+      setError('root.serverError', { type: 'manual', message: 'Invalid or expired parameter token reset link' });
+      toast.error('Invalid reset link');
       return;
     }
 
@@ -58,67 +47,138 @@ export const ResetPasswordForm: React.FC = () => {
       setIsLoading(true);
       await authService.resetPassword({
         token,
-        newPassword: formData.newPassword,
+        newPassword: data.newPassword,
       });
 
-      toast.success('Password reset successful! Please login with your new password.');
+      toast.success('Password reset successful! Please login.');
       router.push('/auth/login');
     } catch (error: any) {
       const errorMsg = error.response?.data?.msg || 'Password reset failed';
       toast.error(errorMsg);
-      setErrors({ submit: errorMsg });
+      setError('root.serverError', { type: 'manual', message: errorMsg });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="w-full max-w-md">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">New Password</label>
-          <input
-            type="password"
-            name="newPassword"
-            value={formData.newPassword}
-            onChange={handleChange}
-            placeholder="Enter your new password"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={isLoading}
-          />
-          {errors.newPassword && <p className="text-red-500 text-sm mt-1">{errors.newPassword}</p>}
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+      
+      {/* Root/Server Error Notification */}
+      {errors.root?.serverError && (
+        <div className="bg-red-50 border border-red-200/60 rounded-xl p-3.5 text-xs font-medium text-red-600">
+          {errors.root.serverError.message}
         </div>
+      )}
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Confirm Password</label>
+      {/* New Password Input Field */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">
+          New Password
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-zinc-400">
+            <Lock size={16} strokeWidth={2} />
+          </div>
           <input
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            placeholder="Confirm your new password"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            {...register('newPassword', {
+              required: 'Password validation field is required',
+              minLength: {
+                value: 6,
+                message: 'Password must be at least 6 characters',
+              },
+            })}
+            type={showNewPw ? 'text' : 'password'}
             disabled={isLoading}
+            placeholder="••••••••"
+            className={`w-full pl-11 pr-12 py-2.5 bg-white text-[13px] font-medium text-zinc-900 rounded-xl border transition-all duration-200 outline-none
+              ${errors.newPassword 
+                ? 'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/5' 
+                : 'border-zinc-200 focus:border-zinc-900 focus:ring-4 focus:ring-zinc-900/5'
+              } disabled:opacity-60`}
           />
-          {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => setShowNewPw(!showNewPw)}
+            disabled={isLoading}
+            className="absolute inset-y-0 right-0 px-4 flex items-center text-zinc-400 hover:text-zinc-900 transition-colors"
+          >
+            {showNewPw ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
         </div>
+        {errors.newPassword && (
+          <p className="text-[11px] font-medium text-red-500 px-1 mt-0.5">
+            {errors.newPassword.message}
+          </p>
+        )}
+      </div>
 
-        {errors.submit && <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-sm">{errors.submit}</div>}
+      {/* Confirm Password Input Field */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">
+          Confirm Password
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-zinc-400">
+            <Lock size={16} strokeWidth={2} />
+          </div>
+          <input
+            {...register('confirmPassword', {
+              required: 'Please confirm your new password',
+              validate: (value) => value === newPasswordValue || 'Passwords do not match',
+            })}
+            type={showConfirmPw ? 'text' : 'password'}
+            disabled={isLoading}
+            placeholder="••••••••"
+            className={`w-full pl-11 pr-12 py-2.5 bg-white text-[13px] font-medium text-zinc-900 rounded-xl border transition-all duration-200 outline-none
+              ${errors.confirmPassword 
+                ? 'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/5' 
+                : 'border-zinc-200 focus:border-zinc-900 focus:ring-4 focus:ring-zinc-900/5'
+              } disabled:opacity-60`}
+          />
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => setShowConfirmPw(!showConfirmPw)}
+            disabled={isLoading}
+            className="absolute inset-y-0 right-0 px-4 flex items-center text-zinc-400 hover:text-zinc-900 transition-colors"
+          >
+            {showConfirmPw ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+        {errors.confirmPassword && (
+          <p className="text-[11px] font-medium text-red-500 px-1 mt-0.5">
+            {errors.confirmPassword.message}
+          </p>
+        )}
+      </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+      {/* Action Execution Submit Control */}
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="w-full justify-center bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl py-2.5 text-xs font-semibold flex items-center gap-2 shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none mt-1"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 size={14} className="animate-spin" strokeWidth={2.5} />
+            Resetting Password...
+          </>
+        ) : (
+          'Reset Password'
+        )}
+      </button>
+
+      {/* Return Option */}
+      <div className="text-center mt-1">
+        <a
+          href="/auth/login"
+          className="text-xs font-semibold text-zinc-400 hover:text-zinc-900 transition-colors duration-200"
         >
-          {isLoading ? 'Resetting...' : 'Reset Password'}
-        </button>
-
-        <p className="text-center text-sm">
-          <a href="/auth/login" className="text-blue-600 hover:underline">
-            Back to Login
-          </a>
-        </p>
-      </form>
-    </div>
+          Back to Login
+        </a>
+      </div>
+    </form>
   );
 };

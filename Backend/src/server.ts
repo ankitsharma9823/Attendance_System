@@ -6,7 +6,7 @@ import app from "./app";
 import { setDeviceTime, syncEmployeesFromDevice, syncWithMachine } from "./modules/device/device.engine";
 import { DEVICE_CONFIG } from "./config/device.config";
 
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT || "5000", 10);
 const DEVICE_STARTUP_SYNC = process.env.DEVICE_STARTUP_SYNC === "true";
 
 // Helper function to pause execution and let sockets clear
@@ -41,7 +41,7 @@ const runDeviceStartup = async () => {
 };
 
 const startServer = () => {
-  app.listen(PORT, async () => {
+  app.listen(PORT, "0.0.0.0" , async () => {
     console.log(`Production Core Engine Online on Port ${PORT}`);
     console.log(`Target Device Configuration: ${DEVICE_CONFIG.IP}:${DEVICE_CONFIG.PORT}`);
 

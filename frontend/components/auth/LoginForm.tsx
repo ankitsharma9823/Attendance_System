@@ -1,97 +1,166 @@
 'use client';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
 import { useAuth } from '@/context/auth-context';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { AuthResponse } from '@/types/auth';
 import { getErrorMessage } from '@/lib/get-error-message';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Loader2 } from 'lucide-react';
+
+interface LoginFormInputs {
+  email: string;
+  password:  string;
+}
 
 export const LoginForm: React.FC = () => {
   const router = useRouter();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const validate = () => {
-    const e: Record<string, string> = {};
-    if (!formData.email.trim()) e.email = 'Required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Invalid email';
-    if (!formData.password) e.password = 'Required';
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm<LoginFormInputs>({
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(p => ({ ...p, [name]: value }));
-    if (errors[name]) setErrors(p => ({ ...p, [name]: '' }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
+  const onSubmit = async (data: LoginFormInputs) => {
     try {
       setIsLoading(true);
-      await login(formData.email, formData.password);
+      await login(data.email, data.password);
       toast.success('Access granted');
       router.push('/attendance');
     } catch (error: unknown) {
       const msg = getErrorMessage(error, 'Authentication failed');
+      
       if (axios.isAxiosError<AuthResponse>(error) && error.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
-        const email = error.response.data.email || formData.email;
+        const email = error.response.data.email || data.email;
         toast.error(msg);
+        setIsLoading(false); // Clear execution state before shifting routes
         router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
         return;
       }
+      
       toast.error(msg);
-      setErrors({ submit: msg });
-    } finally {
+      setError('root.serverError', { type: 'manual', message: msg });
       setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div>
-        <label style={{ display: 'block', marginBottom: 6 }} className="section-label">Email address</label>
-        <input name="email" type="email" value={formData.email} onChange={handleChange}
-          placeholder="operator@system.node" disabled={isLoading} className="input-base" />
-        {errors.email && <p style={{ marginTop: 4, fontSize: 11, color: 'var(--red)', fontFamily: 'DM Mono' }}>{errors.email}</p>}
-      </div>
-
-      <div>
-        <label style={{ display: 'block', marginBottom: 6 }} className="section-label">Access credential</label>
-        <div style={{ position: 'relative' }}>
-          <input name="password" type={showPw ? 'text' : 'password'} value={formData.password} onChange={handleChange}
-            placeholder="••••••••" disabled={isLoading} className="input-base" style={{ paddingRight: 44 }} />
-          <button type="button" onClick={() => setShowPw(!showPw)}
-            style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', padding: 0 }}>
-            {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
-          </button>
-        </div>
-        {errors.password && <p style={{ marginTop: 4, fontSize: 11, color: 'var(--red)', fontFamily: 'DM Mono' }}>{errors.password}</p>}
-      </div>
-
-      {errors.submit && (
-        <div style={{ background: 'var(--red-dim)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, padding: '10px 14px', fontSize: 12, color: 'var(--red)', fontFamily: 'DM Mono' }}>
-          {errors.submit}
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+      
+      {/* Root/Server Error Notification */}
+      {errors.root?.serverError && (
+        <div className="bg-red-50 border border-red-200/60 rounded-xl p-3.5 text-xs font-medium text-red-600 animate-in fade-in-50 duration-200">
+          {errors.root.serverError.message}
         </div>
       )}
 
-      <button type="submit" disabled={isLoading} className="btn-primary" style={{ marginTop: 4 }}>
+      {/* Email Input Field Group */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">
+          Email address
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-zinc-400">
+            <Mail size={16} strokeWidth={2} />
+          </div>
+          <input
+            {...register('email', {
+              required: 'Email address is required',
+              pattern: {
+                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                message: 'Enter a valid email address',
+              },
+            })}
+            type="email"
+            disabled={isLoading}
+            placeholder="operator@system.node"
+            className={`w-full pl-11 pr-4 py-2.5 bg-white text-[13px] font-medium text-zinc-900 rounded-xl border transition-all duration-200 outline-none
+              ${errors.email 
+                ? 'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/5' 
+                : 'border-zinc-200 focus:border-zinc-900 focus:ring-4 focus:ring-zinc-900/5'
+              } disabled:opacity-60`}
+          />
+        </div>
+        {errors.email && (
+          <p className="text-[11px] font-medium text-red-500 px-1 mt-0.5">
+            {errors.email.message}
+          </p>
+        )}
+      </div>
+
+      {/* Password Input Field Group */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">
+          Access credential
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-zinc-400">
+            <Lock size={16} strokeWidth={2} />
+          </div>
+          <input
+            {...register('password', {
+              required: 'Password is required',
+            })}
+            type={showPw ? 'text' : 'password'}
+            disabled={isLoading}
+            placeholder="••••••••"
+            className={`w-full pl-11 pr-12 py-2.5 bg-white text-[13px] font-medium text-zinc-900 rounded-xl border transition-all duration-200 outline-none
+              ${errors.password 
+                ? 'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/5' 
+                : 'border-zinc-200 focus:border-zinc-900 focus:ring-4 focus:ring-zinc-900/5'
+              } disabled:opacity-60`}
+          />
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => setShowPw(!showPw)}
+            disabled={isLoading}
+            className="absolute inset-y-0 right-0 px-4 flex items-center text-zinc-400 hover:text-zinc-900 transition-colors disabled:opacity-50"
+          >
+            {showPw ? <EyeOff size={16} strokeWidth={2} /> : <Eye size={16} strokeWidth={2} />}
+          </button>
+        </div>
+        {errors.password && (
+          <p className="text-[11px] font-medium text-red-500 px-1 mt-0.5">
+            {errors.password.message}
+          </p>
+        )}
+      </div>
+
+      {/* Action Execution Button */}
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="w-full justify-center bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl py-2.5 text-xs font-semibold flex items-center gap-2 shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none mt-2"
+      >
         {isLoading ? (
-          <span className="spin" style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000', borderRadius: '50%' }} />
-        ) : 'Access System'}
+          <>
+            <Loader2 size={14} className="animate-spin" strokeWidth={2.5} />
+            Signing In...
+          </>
+        ) : (
+          'Sign In'
+        )}
       </button>
 
-      <div style={{ textAlign: 'center' }}>
-        <a href="/auth/forgot-password" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }}
-          onMouseEnter={e => (e.currentTarget.style.color = 'var(--accent)')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}>
+      {/* Recovery Account Navigation Link */}
+      <div className="text-center mt-1">
+        <a
+          href="/auth/forgot-password"
+          className="text-xs font-semibold text-zinc-400 hover:text-zinc-900 transition-colors duration-200"
+        >
           Forgot credentials?
         </a>
       </div>

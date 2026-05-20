@@ -5,6 +5,7 @@ import { useAuth } from '@/context/auth-context';
 import { authService } from '@/services/auth-service';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/get-error-message';
+import { UserPlus, Loader2 } from 'lucide-react';
 
 export const AdminRegisterForm: React.FC = () => {
   const { user } = useAuth();
@@ -19,33 +20,20 @@ export const AdminRegisterForm: React.FC = () => {
 
   if (user?.role !== 'admin') {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-        <p className="font-medium">Access Denied</p>
-        <p className="text-sm">Only administrators can register new users.</p>
+      <div className="border border-red-200 bg-red-50 p-4 rounded-xl text-xs font-bold text-red-600">
+        Access Denied: Administrative Clearance Required
       </div>
     );
   }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
-    if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
-    }
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
+    if (!formData.username.trim()) newErrors.username = 'Username is required';
+    if (!formData.email.trim()) newErrors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Invalid email format';
+    if (formData.password.length < 6) newErrors.password = 'Min 6 characters';
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -53,17 +41,11 @@ export const AdminRegisterForm: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       setIsLoading(true);
@@ -72,96 +54,64 @@ export const AdminRegisterForm: React.FC = () => {
         email: formData.email,
         password: formData.password,
       });
-
-      toast.success('User registered successfully!');
+      toast.success('User registered successfully');
       setFormData({ username: '', email: '', password: '', confirmPassword: '' });
     } catch (error: unknown) {
-      const errorMsg = getErrorMessage(error, 'Registration failed');
-      toast.error(errorMsg);
-      setErrors({ submit: errorMsg });
+      toast.error(getErrorMessage(error, 'Registration failed'));
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="w-full max-w-md">
-      <div className="bg-white/5 border border-white/10 text-foreground/80 px-4 py-3 rounded-xl text-sm mb-6 shadow-lg backdrop-blur-md">
-        <p className="font-black uppercase tracking-widest text-[10px]">Command: Create Operator</p>
-        <p className="opacity-50 mt-1">Register a new access node for this interface.</p>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      
+      {/* Header Block matching ForgotPassword theme */}
+      <div className="bg-zinc-100/80 border border-zinc-200/50 rounded-xl p-3 text-[12px] font-bold uppercase tracking-widest text-zinc-600">
+        Register New User
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-2 ml-1">Operator Alias</label>
+      {[
+        { label: 'UserName', name: 'username', type: 'text' },
+        { label: 'Email', name: 'email', type: 'email' },
+        { label: 'Access Credential', name: 'password', type: 'password' },
+        { label: 'Verify Credential', name: 'confirmPassword', type: 'password' },
+      ].map((field) => (
+        <div key={field.name} className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">
+            {field.label}
+          </label>
           <input
-            type="text"
-            name="username"
-            value={formData.username}
+            type={field.type}
+            name={field.name}
+            value={(formData as any)[field.name]}
             onChange={handleChange}
-            placeholder="e.g. j.doe"
-            className="w-full px-5 py-3.5 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-white/20 transition-all text-foreground"
             disabled={isLoading}
+            className={`w-full px-4 py-2.5 bg-white text-[13px] font-medium text-zinc-900 rounded-xl border transition-all duration-200 outline-none
+              ${errors[field.name] 
+                ? 'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/5' 
+                : 'border-zinc-200 focus:border-zinc-900 focus:ring-4 focus:ring-zinc-900/5'
+              } disabled:opacity-60`}
           />
-          {errors.username && <p className="text-rose-500 text-[10px] font-bold uppercase mt-2 ml-1">{errors.username}</p>}
+          {errors[field.name] && (
+            <p className="text-[11px] font-medium text-red-500 px-1">
+              {errors[field.name]}
+            </p>
+          )}
         </div>
+      ))}
 
-        <div>
-          <label className="block text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-2 ml-1">Identity Vector (Email)</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="operator@system.node"
-            className="w-full px-5 py-3.5 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-white/20 transition-all text-foreground"
-            disabled={isLoading}
-          />
-          {errors.email && <p className="text-rose-500 text-[10px] font-bold uppercase mt-2 ml-1">{errors.email}</p>}
-        </div>
-
-        <div>
-          <label className="block text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-2 ml-1">Access Credential</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="••••••••"
-            className="w-full px-5 py-3.5 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-white/20 transition-all text-foreground"
-            disabled={isLoading}
-          />
-          {errors.password && <p className="text-rose-500 text-[10px] font-bold uppercase mt-2 ml-1">{errors.password}</p>}
-        </div>
-
-        <div>
-          <label className="block text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-2 ml-1">Verify Credential</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            placeholder="••••••••"
-            className="w-full px-5 py-3.5 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-white/20 transition-all text-foreground"
-            disabled={isLoading}
-          />
-          {errors.confirmPassword && <p className="text-rose-500 text-[10px] font-bold uppercase mt-2 ml-1">{errors.confirmPassword}</p>}
-        </div>
-
-        {errors.submit && (
-          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-500 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest">
-            {errors.submit}
-          </div>
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="w-full justify-center bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl py-2.5 text-xs font-semibold flex items-center gap-2 shadow-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 mt-2"
+      >
+        {isLoading ? (
+          <><Loader2 size={14} className="animate-spin" /> Processing...</>
+        ) : (
+          <><UserPlus size={14} /> Commit Registration</>
         )}
-
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-muted border border-border text-foreground py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-4 shadow-sm"
-        >
-          {isLoading ? 'Processing...' : 'Register User'}
-        </button>
-      </form>
-    </div>
+      </button>
+    </form>
   );
 };

@@ -48,7 +48,6 @@ export const updateSchedule = async (data: Partial<Schedule>): Promise<Schedule>
 };
 
 export type PunchKind = 'IN' | 'OUT' | 'BREAK_IN' | 'BREAK_OUT';
-
 export const validatePunch = async (
   employeeId: string,
   punchTime: Date,
@@ -56,12 +55,9 @@ export const validatePunch = async (
 ): Promise<{ ok: boolean; message?: string; isOvertime?: boolean; isHalfDay?: boolean }> => {
   const schedule = await getSchedule();
 
-  // Validate limits (this depends on having the current day's record)
-  // Find today's record to check how many punches we have, etc.
-  
   const startOfDay = new Date(punchTime);
   startOfDay.setHours(0, 0, 0, 0);
-  
+
   const record = await prisma.workRecord.findFirst({
     where: {
       employeeId,
@@ -74,7 +70,7 @@ export const validatePunch = async (
     if (punches.length >= schedule.maxPunchesPerDay) {
       return { ok: false, message: `Max punches per day (${schedule.maxPunchesPerDay}) exceeded` };
     }
-    
+
     const lastPunch = punches[punches.length - 1];
     if (lastPunch) {
       const diffMins = (punchTime.getTime() - lastPunch.getTime()) / 60000;
@@ -84,11 +80,6 @@ export const validatePunch = async (
     }
   }
 
-  // Determine window limits based on kind
-  let startLimit, endLimit;
-  let isOvertime = false;
-  let isHalfDay = false;
-
   const toDateWithTime = (timeStr: string) => {
     const [hours, minutes] = timeStr.split(':').map(Number);
     const d = new Date(punchTime);
@@ -96,36 +87,59 @@ export const validatePunch = async (
     return d;
   };
 
+  let startLimit: Date;
+  let endLimit: Date;
+  let isOvertime = false;
+  let isHalfDay = false;
+
   switch (kind) {
     case 'IN':
       startLimit = toDateWithTime(schedule.checkInStart);
       endLimit = toDateWithTime(schedule.checkInEnd);
       if (punchTime < startLimit) {
-        isOvertime = true;
+        isOvertime = true; // early check-in
+      } else if (punchTime > endLimit) {
+        return { ok: false, message: `Check-in window closed at ${schedule.checkInEnd}` };
       }
       break;
+
     case 'BREAK_IN':
       startLimit = toDateWithTime(schedule.breakInStart);
       endLimit = toDateWithTime(schedule.breakInEnd);
+      if (punchTime < startLimit) {
+        return { ok: false, message: `Break not available until ${schedule.breakInStart}` };
+      }
+      if (punchTime > endLimit) {
+        return { ok: false, message: `Break-in window closed at ${schedule.breakInEnd}` };
+      }
       break;
+
     case 'BREAK_OUT':
       startLimit = toDateWithTime(schedule.breakOutStart);
       endLimit = toDateWithTime(schedule.breakOutEnd);
+      if (punchTime < startLimit) {
+        return { ok: false, message: `Cannot punch break-out before ${schedule.breakOutStart}` };
+      }
+      if (punchTime > endLimit) {
+        return { ok: false, message: `Break-out window closed at ${schedule.breakOutEnd}` };
+      }
       break;
+
     case 'OUT':
       startLimit = toDateWithTime(schedule.checkOutStart);
       endLimit = toDateWithTime(schedule.checkOutEnd);
+      if (punchTime < startLimit) {
+        return { ok: false, message: `Cannot check out before ${schedule.checkOutStart}` };
+      }
       if (punchTime > endLimit) {
-        isOvertime = true;
+        isOvertime = true; 
       }
       break;
   }
 
-  if (record && record.checkIn && kind === 'OUT') {
+  if (record?.checkIn && kind === 'OUT') {
     const workedMins = (punchTime.getTime() - record.checkIn.getTime()) / 60000;
-    if (workedMins >= schedule.halfDayMinutes) {
-      isHalfDay = true;
-    }
+    isHalfDay = workedMins < schedule.halfDayMinutes; // ✅ also fixed the logic (< not >=)
   }
 
   return { ok: true, isOvertime, isHalfDay };

@@ -29,13 +29,14 @@ export const sendVerificationEmail = async (email: string, otp: string) => {
     return false;
   }
 };
-
 export const sendPasswordResetEmail = async (
   email: string,
   resetToken: string
 ) => {
   try {
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    // UPDATED: Added /auth prefix to match your Next.js file structure
+    const resetLink = `${process.env.FRONTEND_URL}/auth/reset-password?token=${resetToken}`;
+    
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,

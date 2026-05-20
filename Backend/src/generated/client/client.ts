@@ -61,3 +61,8 @@ export type User = Prisma.UserModel
  * 
  */
 export type AttendanceSchedule = Prisma.AttendanceScheduleModel
+/**
+ * Model SyncLog
+ * 
+ */
+export type SyncLog = Prisma.SyncLogModel

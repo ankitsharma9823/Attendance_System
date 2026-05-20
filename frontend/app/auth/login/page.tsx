@@ -1,13 +1,18 @@
 import { LoginForm } from '@/components/auth/LoginForm';
+import { Cpu } from 'lucide-react';
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="max-w-md w-full">
-        <div className="mb-12 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-3">Welcome Back</h1>
-          <p className="text-sm text-muted-foreground italic uppercase tracking-widest">System Access Terminal</p>
+    <div className="flex min-h-screen items-center justify-center bg-zinc-100 px-4 antialiased">
+      <div className="w-full max-w-[360px] bg-zinc-50 border border-zinc-200/60 rounded-2xl p-6 shadow-sm">
+        
+        {/* Logo and Branding Header */}
+        <div className="flex items-center gap-[10px] justify-center mb-8 pt-2">
+          <span className="font-extrabold text-[16px] tracking-tight text-zinc-900">
+            AttendanceY
+          </span>
         </div>
+
         <LoginForm />
       </div>
     </div>

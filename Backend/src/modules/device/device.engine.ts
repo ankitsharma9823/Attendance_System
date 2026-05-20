@@ -671,6 +671,8 @@
 // };
 
 // @ts-ignore
+
+// @ts-ignore
 import ZKLib from "node-zklib";
 import {
   DEVICE_CONFIG,
@@ -689,7 +691,10 @@ let currentDeviceMutex: Promise<any> | null = null;
 const CMD_GET_TIME = 201;
 const CMD_SET_TIME = 202;
 
-/** ZKTeco packed time (same format as attendance logs and official node-zklib timeParser). */
+// ──────────────────────────────────────────
+//           ZK TIME HELPERS
+// ──────────────────────────────────────────
+
 const decodeZkPackedTime = (packed: number): Date => {
   let time = packed;
   const second = time % 60;
@@ -729,16 +734,13 @@ const readPackedTimeFromCmdReply = (res: unknown): number => {
           (res as ArrayLike<number> ?? []),
       );
 
-  // 🛡️ Guard: A valid ZK time reply packet must be at least 12 bytes
-  // (8-byte header + 4-byte time payload)
   if (!buf || buf.length < 12) {
     console.warn(
-      `[Device Engine] Warning: Received short packet from machine (${buf?.length ?? 0} bytes). Falling back to current timestamp.`,
+      `[Device Engine] Warning: Short packet from machine (${buf?.length ?? 0} bytes). Falling back to current timestamp.`,
     );
     return encodeZkPackedTime(getNepaliDate());
   }
 
-  // Safely read the 4-byte time integer starting at offset 8
   return buf.readUInt32LE(8);
 };
 
@@ -766,16 +768,18 @@ const deviceErrorMessage = (err: unknown): string => {
   return "An unexpected hardware communication error occurred. Check machine status.";
 };
 
+// ──────────────────────────────────────────
+//           DEVICE MUTEX / CONNECTION
+// ──────────────────────────────────────────
+
 const withDevice = async <T>(
   fn: (zk: InstanceType<typeof ZKLib>) => Promise<T>,
 ): Promise<T> => {
-  // If another operation is running, queue up behind it sequentially
   if (currentDeviceMutex) {
     console.log(`[Device Engine] Port busy. Queueing request...`);
     await currentDeviceMutex.catch(() => {});
   }
 
-  // Setup execution block token
   let resolveLock: () => void = () => {};
   currentDeviceMutex = new Promise<void>((resolve) => {
     resolveLock = resolve;
@@ -791,37 +795,28 @@ const withDevice = async <T>(
   );
 
   try {
-    // 1. Establish the physical socket connection.
-    // node-zklib authenticates internally using the comKey passed to the constructor.
-    // Do NOT call executeCmd(1, ...) manually — double-auth confuses the machine
-    // and causes it to return 8-byte header-only replies (no payload).
     await zk.createSocket();
-
-    // 2. Execute your task (Sync, Delete, Add, etc.)
     return await fn(zk);
   } catch (err) {
-    // 🛡️ Guard: Clean up sockets immediately on error to prevent node-zklib
-    // background crashes from leaking handles
     try {
       if (zk.zklibTcp && zk.zklibTcp.socket) {
         zk.zklibTcp.socket.destroy();
       }
     } catch (_) {}
-
     throw new Error(deviceErrorMessage(err));
   } finally {
-    // 4. Always disconnect cleanly to free up the machine's busy thread
     try {
       await zk.disconnect();
     } catch (_) {}
-
-    // 🔓 Release lock unconditionally so the next queued task can proceed
     resolveLock();
     currentDeviceMutex = null;
   }
 };
 
-/** Nepal wall clock as a Date whose getters match Asia/Kathmandu (for ZK encode). */
+// ──────────────────────────────────────────
+//           NEPAL TIME HELPERS
+// ──────────────────────────────────────────
+
 export const getNepaliDate = (): Date => {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "Asia/Kathmandu",
@@ -836,6 +831,7 @@ export const getNepaliDate = (): Date => {
 
   const n = (type: string) =>
     parseInt(parts.find((p) => p.type === type)?.value ?? "0", 10);
+
   return new Date(
     n("year"),
     n("month") - 1,
@@ -857,7 +853,10 @@ const formatWallClock = (d: Date) =>
     .toString()
     .padStart(2, "0")}`;
 
-/** Read the fingerprint machine clock via ZK protocol. */
+// ──────────────────────────────────────────
+//           DEVICE CLOCK
+// ──────────────────────────────────────────
+
 export const getDeviceTime = async (): Promise<Date> => {
   return withDevice(async (zk) => {
     const res = await zk.executeCmd(CMD_GET_TIME, "");
@@ -865,7 +864,6 @@ export const getDeviceTime = async (): Promise<Date> => {
   });
 };
 
-/** Set the fingerprint machine clock to Nepal time (or a provided date). */
 export const setDeviceTime = async (date?: Date): Promise<Date> => {
   const target = date ?? getNepaliDate();
 
@@ -873,27 +871,21 @@ export const setDeviceTime = async (date?: Date): Promise<Date> => {
     await zk.executeCmd(CMD_SET_TIME, encodeZkPackedBuffer(target));
   });
 
-  // ZKTeco needs ~1.5s to commit the clock write internally before a read-back
   await new Promise((r) => setTimeout(r, 1500));
 
   const verified = await getDeviceTime();
-  const driftMinutes = Math.abs(
-    (verified.getTime() - target.getTime()) / 60000,
-  );
+  const driftMinutes = Math.abs((verified.getTime() - target.getTime()) / 60000);
 
   if (driftMinutes > 2) {
     throw new Error(
-      `Device clock was not updated (device shows ${formatWallClock(verified)}, expected ${formatWallClock(target)}). Set time manually on the device: Menu → System → Date & Time.`,
+      `Device clock was not updated (device shows ${formatWallClock(verified)}, expected ${formatWallClock(target)}). Set time manually: Menu → System → Date & Time.`,
     );
   }
 
-  console.log(
-    `[Device Engine] Device clock verified: ${formatWallClock(verified)}`,
-  );
+  console.log(`[Device Engine] Device clock verified: ${formatWallClock(verified)}`);
   return verified;
 };
 
-/** Get device time, info, and log count in a single connection. */
 export const getMachineTimeInfo = async (req: any, res: any) => {
   try {
     const { deviceTime, info, logs } = await withDevice(async (zk) => {
@@ -958,30 +950,6 @@ type DeviceLog = {
 const PUNCH_DEBOUNCE_MS =
   parseInt(process.env.PUNCH_DEBOUNCE_SECONDS || "45", 10) * 1000;
 
-/** Collapse accidental double-scans: same user within debounce window → keep latest only. */
-const dedupeRapidPunches = (logs: DeviceLog[]): DeviceLog[] => {
-  const result: DeviceLog[] = [];
-  for (const log of logs) {
-    const empId = String(
-      log.deviceUserId ?? log.userId ?? log.uid ?? "",
-    ).trim();
-    const txMs = parseHardwareTime(log).getTime();
-    const prev = result[result.length - 1];
-    if (prev) {
-      const prevEmp = String(
-        prev.deviceUserId ?? prev.userId ?? prev.uid ?? "",
-      ).trim();
-      const prevMs = parseHardwareTime(prev).getTime();
-      if (empId === prevEmp && txMs - prevMs < PUNCH_DEBOUNCE_MS) {
-        result[result.length - 1] = log;
-        continue;
-      }
-    }
-    result.push(log);
-  }
-  return result;
-};
-
 const parseHardwareTime = (logItem: {
   recordTime?: Date;
   record_time?: Date;
@@ -998,6 +966,26 @@ const parseHardwareTime = (logItem: {
   return isNaN(parsed.getTime()) ? new Date() : parsed;
 };
 
+/** Collapse accidental double-scans: same user within debounce window → keep latest only. */
+const dedupeRapidPunches = (logs: DeviceLog[]): DeviceLog[] => {
+  const result: DeviceLog[] = [];
+  for (const log of logs) {
+    const empId = String(log.deviceUserId ?? log.userId ?? log.uid ?? "").trim();
+    const txMs = parseHardwareTime(log).getTime();
+    const prev = result[result.length - 1];
+    if (prev) {
+      const prevEmp = String(prev.deviceUserId ?? prev.userId ?? prev.uid ?? "").trim();
+      const prevMs = parseHardwareTime(prev).getTime();
+      if (empId === prevEmp && txMs - prevMs < PUNCH_DEBOUNCE_MS) {
+        result[result.length - 1] = log;
+        continue;
+      }
+    }
+    result.push(log);
+  }
+  return result;
+};
+
 const ensureEmployee = async (empId: string, name?: string) => {
   await prisma.employee.upsert({
     where: { id: empId },
@@ -1007,9 +995,7 @@ const ensureEmployee = async (empId: string, name?: string) => {
 };
 
 export const syncEmployeesFromDevice = async () => {
-  console.log(
-    "[Device Engine] Pulling employee registries from ZK machine...",
-  );
+  console.log("[Device Engine] Pulling employee registries from ZK machine...");
 
   try {
     const users = (await withDevice((zk) => zk.getUsers())) as {
@@ -1024,15 +1010,13 @@ export const syncEmployeesFromDevice = async () => {
       await ensureEmployee(empId, u.name);
       processed++;
     }
+
     return {
       success: true,
       message: `Successfully synchronized ${processed} employee profiles.`,
     };
   } catch (err: any) {
-    console.error(
-      "[Device Engine] Employee synchronization failed:",
-      err.message,
-    );
+    console.error("[Device Engine] Employee synchronization failed:", err.message);
     return { success: false, message: err.message };
   }
 };
@@ -1077,9 +1061,9 @@ export const syncWithMachine = async () => {
 };
 
 const runSyncOnce = async () => {
-  const logs = (await withDevice((zk) =>
-    zk.getAttendances(),
-  )) as { data?: DeviceLog[] };
+  const logs = (await withDevice((zk) => zk.getAttendances())) as {
+    data?: DeviceLog[];
+  };
 
   if (!logs?.data?.length) {
     return {
@@ -1091,8 +1075,8 @@ const runSyncOnce = async () => {
 
   const totalOnDevice = logs.data.length;
   let logCursor = lastLogCount;
-
   let newLogs: DeviceLog[];
+
   if (logCursor < 0) {
     const replayN = Math.abs(logCursor);
     newLogs = logs.data.slice(-replayN);
@@ -1118,6 +1102,7 @@ const runSyncOnce = async () => {
   console.log(
     `[Device Engine] ${newLogs.length} new log(s) (cursor=${logCursor}, device total=${totalOnDevice})`,
   );
+
   if (newLogs.length === 0 && latestOnDevice) {
     console.log(
       `[Device Engine] Latest on device: user=${latestOnDevice.deviceUserId} at ${formatWallClock(parseHardwareTime(latestOnDevice))}`,
@@ -1134,36 +1119,22 @@ const runSyncOnce = async () => {
   let successfullyLogged = 0;
 
   for (const log of punchesToProcess) {
-    const empId = String(
-      log.deviceUserId ?? log.userId ?? log.uid ?? "",
-    ).trim();
+    const empId = String(log.deviceUserId ?? log.userId ?? log.uid ?? "").trim();
     if (!empId || empId === "0") continue;
 
     const txTime = parseHardwareTime(log);
 
     try {
       await ensureEmployee(empId);
-      const { validatePunch } = await import(
-        "../../services/schedule.service"
-      );
-      const kind = log.inOutMode === 0 ? "IN" : "OUT";
-      const validation = await validatePunch(empId, txTime, kind as any);
 
-      if (!validation.ok) {
-        console.warn(
-          `[Device Engine] Punch rejected for ${empId}: ${validation.message}`,
-        );
-        continue;
-      }
-
+      // ✅ handleAttendance resolves punch kind from record state
+      // and validates against dynamic schedule windows internally
       const saved = await handleAttendance({
         employeeId: empId,
         timestamp: txTime,
-        type: kind,
         deviceIp: DEVICE_CONFIG.IP,
-        isOvertime: validation.isOvertime,
-        isHalfDay: validation.isHalfDay,
       });
+
       if (saved) successfullyLogged++;
     } catch (innerError: any) {
       console.error(
@@ -1178,9 +1149,7 @@ const runSyncOnce = async () => {
   if (newLogs.length > 0) {
     setLastLogCount(cursorAdvanced);
     const processed = logs.data.slice(logCursor, cursorAdvanced);
-    const newestMs = Math.max(
-      ...processed.map((l) => parseHardwareTime(l).getTime()),
-    );
+    const newestMs = Math.max(...processed.map((l) => parseHardwareTime(l).getTime()));
     setLastSyncTime(new Date(newestMs));
   }
 
@@ -1197,16 +1166,14 @@ const runSyncOnce = async () => {
 //           USER CRUD FUNCTIONS
 // ──────────────────────────────────────────
 
-// ZKTeco user record is 72 bytes (same format node-zklib decodes in getUsers):
-//   [0-1]   uid          UInt16LE  — internal hardware index
-//   [2]     role         UInt8     — 0=user, 14=admin
-//   [3-11]  password     9 bytes   — ASCII, zero-padded
-//   [12-35] name         24 bytes  — UTF8, zero-padded
-//   [36-43] cardNo       8 bytes   — zero for fingerprint-only
-//   [44]    groupId      UInt8
-//   [45-46] timezone     UInt16LE
-//   [47-48] userId       UInt16LE  — the "badge" number shown on machine
-//   [49-71] reserved     zeros
+// ZKTeco user record — 72-byte buffer layout:
+//   [0-1]   uid        UInt16LE — internal hardware index
+//   [2]     role       UInt8    — 0=user, 14=admin
+//   [3-10]  password   8 bytes  — ASCII, zero-padded
+//   [11-34] name       24 bytes — ASCII, zero-padded
+//   [35-47] cardNo     zeros
+//   [48-56] userId     ASCII    — badge number shown on machine
+//   [57-71] reserved   zeros
 const buildUserBuffer = (
   uid: number,
   userId: string,
@@ -1215,24 +1182,18 @@ const buildUserBuffer = (
   password: string = "",
 ): Buffer => {
   const buf = Buffer.alloc(72, 0);
-  buf.writeUInt16LE(uid, 0);                                    // [0-1]  uid
-  buf.writeUInt8(role & 0xff, 2);                               // [2]    role
-  Buffer.from(password.slice(0, 8), "ascii").copy(buf, 3);      // [3-10] password
-  Buffer.from(name.slice(0, 24), "ascii").copy(buf, 11);        // [11-34] name ← was 12
-  // cardno at [35-38] — leave as 0
-  Buffer.from(userId.slice(0, 9), "ascii").copy(buf, 48);       // [48-56] userId ← was 47 as UInt16
+  buf.writeUInt16LE(uid, 0);
+  buf.writeUInt8(role & 0xff, 2);
+  Buffer.from(password.slice(0, 8), "ascii").copy(buf, 3);
+  Buffer.from(name.slice(0, 24), "ascii").copy(buf, 11);
+  Buffer.from(userId.slice(0, 9), "ascii").copy(buf, 48);
   return buf;
 };
 
 export const getDeviceUsers = async () => {
   return withDevice(async (zk) => {
     const users = (await zk.getUsers()) as {
-      data?: Array<{
-        userId?: string;
-        uid?: number;
-        name?: string;
-        role?: number;
-      }>;
+      data?: Array<{ userId?: string; uid?: number; name?: string; role?: number }>;
     };
     return users?.data ?? [];
   });
@@ -1243,9 +1204,10 @@ export const getNextAvailableDeviceId = async (): Promise<number> => {
   if (!users || users.length === 0) return 1;
 
   const uids = users.map((u) => {
-    // Always prefer the numeric uid hardware index, not the userId string
-    const n = typeof u.uid === "number" ? u.uid : parseInt(String(u.uid ?? u.userId ?? ""), 10);
-    // Must be a valid UInt16 value to be a real hardware slot
+    const n =
+      typeof u.uid === "number"
+        ? u.uid
+        : parseInt(String(u.uid ?? u.userId ?? ""), 10);
     return Number.isFinite(n) && n > 0 && n <= 65535 ? n : 0;
   });
 
@@ -1255,34 +1217,43 @@ export const getNextAvailableDeviceId = async (): Promise<number> => {
   return maxUid + 1;
 };
 
-// CMD_USER_WRQ = 8  — write a user record to the device
 export const addDeviceUser = async (name: string, role: number = 0) => {
   return withDevice(async (zk) => {
-    // Get users and next ID in same connection
-    const users = (await zk.getUsers()) as { data?: Array<{ uid?: number; userId?: string }> };
+    const users = (await zk.getUsers()) as {
+      data?: Array<{ uid?: number; userId?: string }>;
+    };
     const list = users?.data ?? [];
     const uids = list.map((u) => {
-      const n = typeof u.uid === "number" ? u.uid : parseInt(String(u.uid ?? u.userId ?? ""), 10);
+      const n =
+        typeof u.uid === "number"
+          ? u.uid
+          : parseInt(String(u.uid ?? u.userId ?? ""), 10);
       return Number.isFinite(n) && n > 0 && n <= 65535 ? n : 0;
     });
     const nextId = Math.max(...uids, 0) + 1;
     if (nextId > 65534) throw new Error("Device user slots full.");
 
     console.log(`[Device Engine] Adding user "${name}" as uid=${nextId}`);
+
     await zk.disableDevice();
     try {
       const userBuf = buildUserBuffer(nextId, String(nextId), name.trim(), role);
-      await zk.executeCmd(8, userBuf);  // CMD_USER_WRQ
-      await zk.executeCmd(1013, "");    // CMD_REFRESHDATA
-      await zk.executeCmd(1014, "");    // CMD_REFRESHOPTION — forces K40 to reload user list on screen
+      await zk.executeCmd(8, userBuf);   // CMD_USER_WRQ
+      await zk.executeCmd(1013, "");     // CMD_REFRESHDATA
+      await zk.executeCmd(1014, "");     // CMD_REFRESHOPTION
     } finally {
       await zk.enableDevice();
     }
+
     await ensureEmployee(String(nextId), name);
-    return { success: true, message: `User registered successfully.`, employeeId: nextId };
+    return {
+      success: true,
+      message: `User registered successfully.`,
+      employeeId: nextId,
+    };
   });
 };
-// CMD_USER_WRQ = 8  — overwrite existing record (same uid) to update name/role
+
 export const updateDeviceUser = async (
   uid: number,
   userid: string,
@@ -1291,29 +1262,24 @@ export const updateDeviceUser = async (
 ) => {
   return withDevice(async (zk) => {
     const userBuf = buildUserBuffer(uid, userid, name.trim(), role);
-    await zk.executeCmd(8, userBuf);           // CMD_USER_WRQ
-    await zk.executeCmd(1013, "");             // CMD_REFRESHDATA
+    await zk.executeCmd(8, userBuf);   // CMD_USER_WRQ
+    await zk.executeCmd(1013, "");     // CMD_REFRESHDATA
     await prisma.employee
       .update({ where: { id: userid }, data: { name: name.trim() } })
       .catch(() => {});
-    console.log(`[Device Engine] User updated: uid=${uid} userid=${userid} name="${name}" role=${role}`);
+    console.log(
+      `[Device Engine] User updated: uid=${uid} userid=${userid} name="${name}" role=${role}`,
+    );
     return { success: true, message: `User updated successfully.` };
   });
 };
 
-// CMD_DELETE_USER = 18  — delete by uid (2-byte LE payload)
-export const deleteDeviceUser = async (
-  uid: number | string,
-  userid: string,
-) => {
+export const deleteDeviceUser = async (uid: number | string, userid: string) => {
   return withDevice(async (zk) => {
     let numericUid = typeof uid === "string" ? parseInt(uid, 10) : uid;
 
-    // If uid wasn't provided, look it up from device user list
     if (isNaN(numericUid) || numericUid <= 0) {
-      console.log(
-        `[Device Engine] UID missing — looking up by userId: ${userid}`,
-      );
+      console.log(`[Device Engine] UID missing — looking up by userId: ${userid}`);
       const usersResponse = (await zk.getUsers()) as {
         data?: Array<{ userId?: string; uid?: number }>;
       };
@@ -1324,31 +1290,29 @@ export const deleteDeviceUser = async (
         numericUid = match.uid;
         console.log(`[Device Engine] Resolved UID: ${numericUid}`);
       } else {
-        throw new Error(
-          `Cannot delete: no hardware UID found for user "${userid}".`,
-        );
+        throw new Error(`Cannot delete: no hardware UID found for user "${userid}".`);
       }
     }
 
     console.log(`[Device Engine] Deleting UID=${numericUid} userId=${userid}`);
 
-    // 1. Clear fingerprint templates first (CMD_DEL_FPTMP = 134)
+    // 1. Clear fingerprint templates (CMD_DEL_FPTMP = 134)
     try {
       const fpBuf = Buffer.alloc(6, 0);
       fpBuf.writeUInt16LE(numericUid, 0);
-      fpBuf.writeUInt16LE(0xffff, 2); // all finger slots
+      fpBuf.writeUInt16LE(0xffff, 2);
       fpBuf.writeUInt16LE(1, 4);
-      await zk.executeCmd(134, fpBuf);  // CMD_DEL_FPTMP
+      await zk.executeCmd(134, fpBuf);
     } catch {
       console.warn(`[Device Engine] Fingerprint clear skipped (non-critical).`);
     }
 
-    // 2. Delete the user record (CMD_DELETE_USER = 18)
+    // 2. Delete user record (CMD_DELETE_USER = 18)
     const delBuf = Buffer.alloc(2);
     delBuf.writeUInt16LE(numericUid, 0);
-    await zk.executeCmd(18, delBuf);   // CMD_DELETE_USER
+    await zk.executeCmd(18, delBuf);
 
-    // 3. Commit changes to flash
+    // 3. Commit to flash
     await zk.executeCmd(1013, "");     // CMD_REFRESHDATA
 
     // 4. Remove from database
@@ -1370,15 +1334,14 @@ export const deleteDeviceUser = async (
   });
 };
 
-// CMD_DEL_FPTMP = 134  — clear all fingerprint templates for a uid
 export const clearDeviceFingerprint = async (uid: number) => {
   return withDevice(async (zk) => {
     const buf = Buffer.alloc(6, 0);
     buf.writeUInt16LE(uid, 0);
-    buf.writeUInt16LE(0xffff, 2); // 0xffff = all finger slots
+    buf.writeUInt16LE(0xffff, 2);
     buf.writeUInt16LE(1, 4);
-    await zk.executeCmd(134, buf); // CMD_DEL_FPTMP
-    await zk.executeCmd(1013, ""); // CMD_REFRESHDATA
+    await zk.executeCmd(134, buf);   // CMD_DEL_FPTMP
+    await zk.executeCmd(1013, "");   // CMD_REFRESHDATA
     console.log(`[Device Engine] Fingerprints cleared for uid=${uid}`);
     return { success: true, message: `Fingerprints cleared.` };
   });

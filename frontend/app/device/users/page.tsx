@@ -148,7 +148,7 @@ export default function MachineUsersPage() {
 
   return (
     <AppSidebar>
-      <main className="max-w-[1200px] mx-auto px-4 py-8 md:px-8 font-[family-name:var(--font-outfit)]">
+      <main className="max-w-300 mx-auto px-4 py-8 md:px-8 font-[family-name:var(--font-outfit)]">
         
         {/* Modern Header Grid Row */}
         <header className="flex items-start justify-between mb-8">
