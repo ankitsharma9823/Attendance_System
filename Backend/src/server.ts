@@ -20,14 +20,11 @@ const runDeviceStartup = async () => {
     await setDeviceTime();
     console.log("[Device Engine] Step 1/3: Device clock synced successfully.");
     
-    // ⏳ Allow socket thread 3 seconds to breathe
     await delay(3000);
 
-    // 2. Pull Employees
     console.log("[Device Engine] Step 2/3: Launching employee profile registry sync...");
     await syncEmployeesFromDevice();
     
-    // ⏳ Allow socket thread another 3 seconds to breathe
     await delay(3000);
 
     // 3. Pull Logs
@@ -41,12 +38,11 @@ const runDeviceStartup = async () => {
 };
 
 const startServer = () => {
-  app.listen(PORT, "0.0.0.0" , async () => {
+  app.listen(PORT, async () => {
     console.log(`Production Core Engine Online on Port ${PORT}`);
     console.log(`Target Device Configuration: ${DEVICE_CONFIG.IP}:${DEVICE_CONFIG.PORT}`);
 
     if (DEVICE_STARTUP_SYNC) {
-      // Execute sequentially right after server boot
       await runDeviceStartup();
     } else {
       console.log("[Device] Startup sync disabled (DEVICE_STARTUP_SYNC=false). Use POST /api/device/sync.");

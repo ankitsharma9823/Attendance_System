@@ -35,8 +35,8 @@ export default function Home() {
       setRecords([]); setMonthlyStats([]);
       setError(getErrorMessage(err, 'Unable to load dashboard'));
     } finally { setLoading(false); }
-  }, [currentYear]); // EXACT DEPENDENCY MATRIX PRESERVED
-
+  }, [currentYear]); 
+  
   useEffect(() => { loadDashboard(); }, [loadDashboard]);
 
   const analytics = useMemo(() => {
