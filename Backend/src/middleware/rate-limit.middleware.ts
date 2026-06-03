@@ -1,9 +1,5 @@
 import { rateLimit } from 'express-rate-limit';
 
-/**
- * Specifically protects heavy hardware operations (Sync, Reset, Cleanup)
- * to prevent hammering the biometric device's fragile socket interface.
- */
 export const deviceOpsLimiter = rateLimit({
 	windowMs: 1 * 60 * 1000, // 1 minute
 	limit: 5, 
@@ -15,9 +11,6 @@ export const deviceOpsLimiter = rateLimit({
 	}
 });
 
-/**
- * Standard API rate limiter for general endpoints
- */
 export const apiLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
 	limit: 100, // Limit each IP to 100 requests per `window`

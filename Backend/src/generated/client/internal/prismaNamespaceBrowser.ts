@@ -55,7 +55,8 @@ export const ModelName = {
   WorkRecord: 'WorkRecord',
   User: 'User',
   AttendanceSchedule: 'AttendanceSchedule',
-  SyncLog: 'SyncLog'
+  SyncLog: 'SyncLog',
+  Holiday: 'Holiday'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -77,7 +78,9 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 export const EmployeeScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  department: 'department'
+  department: 'department',
+  isActive: 'isActive',
+  deviceRole: 'deviceRole'
 } as const
 
 export type EmployeeScalarFieldEnum = (typeof EmployeeScalarFieldEnum)[keyof typeof EmployeeScalarFieldEnum]
@@ -147,6 +150,16 @@ export const SyncLogScalarFieldEnum = {
 } as const
 
 export type SyncLogScalarFieldEnum = (typeof SyncLogScalarFieldEnum)[keyof typeof SyncLogScalarFieldEnum]
+
+
+export const HolidayScalarFieldEnum = {
+  id: 'id',
+  date: 'date',
+  name: 'name',
+  type: 'type'
+} as const
+
+export type HolidayScalarFieldEnum = (typeof HolidayScalarFieldEnum)[keyof typeof HolidayScalarFieldEnum]
 
 
 export const SortOrder = {

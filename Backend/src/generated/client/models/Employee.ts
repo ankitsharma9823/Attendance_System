@@ -20,46 +20,76 @@ export type EmployeeModel = runtime.Types.Result.DefaultSelection<Prisma.$Employ
 
 export type AggregateEmployee = {
   _count: EmployeeCountAggregateOutputType | null
+  _avg: EmployeeAvgAggregateOutputType | null
+  _sum: EmployeeSumAggregateOutputType | null
   _min: EmployeeMinAggregateOutputType | null
   _max: EmployeeMaxAggregateOutputType | null
+}
+
+export type EmployeeAvgAggregateOutputType = {
+  deviceRole: number | null
+}
+
+export type EmployeeSumAggregateOutputType = {
+  deviceRole: number | null
 }
 
 export type EmployeeMinAggregateOutputType = {
   id: string | null
   name: string | null
   department: string | null
+  isActive: boolean | null
+  deviceRole: number | null
 }
 
 export type EmployeeMaxAggregateOutputType = {
   id: string | null
   name: string | null
   department: string | null
+  isActive: boolean | null
+  deviceRole: number | null
 }
 
 export type EmployeeCountAggregateOutputType = {
   id: number
   name: number
   department: number
+  isActive: number
+  deviceRole: number
   _all: number
 }
 
+
+export type EmployeeAvgAggregateInputType = {
+  deviceRole?: true
+}
+
+export type EmployeeSumAggregateInputType = {
+  deviceRole?: true
+}
 
 export type EmployeeMinAggregateInputType = {
   id?: true
   name?: true
   department?: true
+  isActive?: true
+  deviceRole?: true
 }
 
 export type EmployeeMaxAggregateInputType = {
   id?: true
   name?: true
   department?: true
+  isActive?: true
+  deviceRole?: true
 }
 
 export type EmployeeCountAggregateInputType = {
   id?: true
   name?: true
   department?: true
+  isActive?: true
+  deviceRole?: true
   _all?: true
 }
 
@@ -101,6 +131,18 @@ export type EmployeeAggregateArgs<ExtArgs extends runtime.Types.Extensions.Inter
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: EmployeeAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: EmployeeSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: EmployeeMinAggregateInputType
@@ -131,6 +173,8 @@ export type EmployeeGroupByArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   _count?: EmployeeCountAggregateInputType | true
+  _avg?: EmployeeAvgAggregateInputType
+  _sum?: EmployeeSumAggregateInputType
   _min?: EmployeeMinAggregateInputType
   _max?: EmployeeMaxAggregateInputType
 }
@@ -139,7 +183,11 @@ export type EmployeeGroupByOutputType = {
   id: string
   name: string
   department: string | null
+  isActive: boolean
+  deviceRole: number
   _count: EmployeeCountAggregateOutputType | null
+  _avg: EmployeeAvgAggregateOutputType | null
+  _sum: EmployeeSumAggregateOutputType | null
   _min: EmployeeMinAggregateOutputType | null
   _max: EmployeeMaxAggregateOutputType | null
 }
@@ -166,6 +214,8 @@ export type EmployeeWhereInput = {
   id?: Prisma.StringFilter<"Employee"> | string
   name?: Prisma.StringFilter<"Employee"> | string
   department?: Prisma.StringNullableFilter<"Employee"> | string | null
+  isActive?: Prisma.BoolFilter<"Employee"> | boolean
+  deviceRole?: Prisma.IntFilter<"Employee"> | number
   records?: Prisma.WorkRecordListRelationFilter
 }
 
@@ -173,6 +223,8 @@ export type EmployeeOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   department?: Prisma.SortOrderInput | Prisma.SortOrder
+  isActive?: Prisma.SortOrder
+  deviceRole?: Prisma.SortOrder
   records?: Prisma.WorkRecordOrderByRelationAggregateInput
 }
 
@@ -183,6 +235,8 @@ export type EmployeeWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.EmployeeWhereInput | Prisma.EmployeeWhereInput[]
   name?: Prisma.StringFilter<"Employee"> | string
   department?: Prisma.StringNullableFilter<"Employee"> | string | null
+  isActive?: Prisma.BoolFilter<"Employee"> | boolean
+  deviceRole?: Prisma.IntFilter<"Employee"> | number
   records?: Prisma.WorkRecordListRelationFilter
 }, "id">
 
@@ -190,9 +244,13 @@ export type EmployeeOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   department?: Prisma.SortOrderInput | Prisma.SortOrder
+  isActive?: Prisma.SortOrder
+  deviceRole?: Prisma.SortOrder
   _count?: Prisma.EmployeeCountOrderByAggregateInput
+  _avg?: Prisma.EmployeeAvgOrderByAggregateInput
   _max?: Prisma.EmployeeMaxOrderByAggregateInput
   _min?: Prisma.EmployeeMinOrderByAggregateInput
+  _sum?: Prisma.EmployeeSumOrderByAggregateInput
 }
 
 export type EmployeeScalarWhereWithAggregatesInput = {
@@ -202,12 +260,16 @@ export type EmployeeScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Employee"> | string
   name?: Prisma.StringWithAggregatesFilter<"Employee"> | string
   department?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
+  isActive?: Prisma.BoolWithAggregatesFilter<"Employee"> | boolean
+  deviceRole?: Prisma.IntWithAggregatesFilter<"Employee"> | number
 }
 
 export type EmployeeCreateInput = {
   id: string
   name: string
   department?: string | null
+  isActive?: boolean
+  deviceRole?: number
   records?: Prisma.WorkRecordCreateNestedManyWithoutEmployeeInput
 }
 
@@ -215,6 +277,8 @@ export type EmployeeUncheckedCreateInput = {
   id: string
   name: string
   department?: string | null
+  isActive?: boolean
+  deviceRole?: number
   records?: Prisma.WorkRecordUncheckedCreateNestedManyWithoutEmployeeInput
 }
 
@@ -222,6 +286,8 @@ export type EmployeeUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
   records?: Prisma.WorkRecordUpdateManyWithoutEmployeeNestedInput
 }
 
@@ -229,6 +295,8 @@ export type EmployeeUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
   records?: Prisma.WorkRecordUncheckedUpdateManyWithoutEmployeeNestedInput
 }
 
@@ -236,36 +304,56 @@ export type EmployeeCreateManyInput = {
   id: string
   name: string
   department?: string | null
+  isActive?: boolean
+  deviceRole?: number
 }
 
 export type EmployeeUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type EmployeeUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type EmployeeCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   department?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
+  deviceRole?: Prisma.SortOrder
+}
+
+export type EmployeeAvgOrderByAggregateInput = {
+  deviceRole?: Prisma.SortOrder
 }
 
 export type EmployeeMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   department?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
+  deviceRole?: Prisma.SortOrder
 }
 
 export type EmployeeMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   department?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
+  deviceRole?: Prisma.SortOrder
+}
+
+export type EmployeeSumOrderByAggregateInput = {
+  deviceRole?: Prisma.SortOrder
 }
 
 export type EmployeeScalarRelationFilter = {
@@ -279,6 +367,18 @@ export type StringFieldUpdateOperationsInput = {
 
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
+}
+
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
 }
 
 export type EmployeeCreateNestedOneWithoutRecordsInput = {
@@ -299,12 +399,16 @@ export type EmployeeCreateWithoutRecordsInput = {
   id: string
   name: string
   department?: string | null
+  isActive?: boolean
+  deviceRole?: number
 }
 
 export type EmployeeUncheckedCreateWithoutRecordsInput = {
   id: string
   name: string
   department?: string | null
+  isActive?: boolean
+  deviceRole?: number
 }
 
 export type EmployeeCreateOrConnectWithoutRecordsInput = {
@@ -327,12 +431,16 @@ export type EmployeeUpdateWithoutRecordsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type EmployeeUncheckedUpdateWithoutRecordsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 
@@ -370,6 +478,8 @@ export type EmployeeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   id?: boolean
   name?: boolean
   department?: boolean
+  isActive?: boolean
+  deviceRole?: boolean
   records?: boolean | Prisma.Employee$recordsArgs<ExtArgs>
   _count?: boolean | Prisma.EmployeeCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["employee"]>
@@ -378,21 +488,27 @@ export type EmployeeSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   id?: boolean
   name?: boolean
   department?: boolean
+  isActive?: boolean
+  deviceRole?: boolean
 }, ExtArgs["result"]["employee"]>
 
 export type EmployeeSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
   department?: boolean
+  isActive?: boolean
+  deviceRole?: boolean
 }, ExtArgs["result"]["employee"]>
 
 export type EmployeeSelectScalar = {
   id?: boolean
   name?: boolean
   department?: boolean
+  isActive?: boolean
+  deviceRole?: boolean
 }
 
-export type EmployeeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "department", ExtArgs["result"]["employee"]>
+export type EmployeeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "department" | "isActive" | "deviceRole", ExtArgs["result"]["employee"]>
 export type EmployeeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   records?: boolean | Prisma.Employee$recordsArgs<ExtArgs>
   _count?: boolean | Prisma.EmployeeCountOutputTypeDefaultArgs<ExtArgs>
@@ -409,6 +525,8 @@ export type $EmployeePayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     id: string
     name: string
     department: string | null
+    isActive: boolean
+    deviceRole: number
   }, ExtArgs["result"]["employee"]>
   composites: {}
 }
@@ -836,6 +954,8 @@ export interface EmployeeFieldRefs {
   readonly id: Prisma.FieldRef<"Employee", 'String'>
   readonly name: Prisma.FieldRef<"Employee", 'String'>
   readonly department: Prisma.FieldRef<"Employee", 'String'>
+  readonly isActive: Prisma.FieldRef<"Employee", 'Boolean'>
+  readonly deviceRole: Prisma.FieldRef<"Employee", 'Int'>
 }
     
 

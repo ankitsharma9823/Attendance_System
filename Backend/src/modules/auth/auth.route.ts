@@ -16,6 +16,6 @@ router.post("/resend-verification", ResendVerification);
 router.post("/login", Login);
 router.post("/forgot-password", ForgotPassword);
 router.post("/reset-password", ResetPassword);
-router.post("/admin/register", authenticate, AdminRegisterUser);
+router.post("/admin/register", AdminRegisterUser);
 
 export default router;

@@ -62,6 +62,15 @@ export class DeviceController {
     }
   }
 
+  async syncUsersFromDb(req: Request, res: Response) {
+    try {
+      const result = await deviceService.syncUsersFromDb();
+      return res.status(result.success ? 200 : 400).json(result);
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
   async purgeDatabase(req: Request, res: Response) {
     try {
       const counts = await deviceService.purgeDatabase();
