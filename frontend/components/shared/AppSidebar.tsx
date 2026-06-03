@@ -57,7 +57,7 @@ export const AppSidebar = ({ children }: { children: React.ReactNode }) => {
       <Link 
         href={href} 
         onClick={() => setIsOpen(false)}
-        className={`flex items-center gap-[10px] px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200
+        className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200
           ${active 
             ? 'text-zinc-900 bg-white shadow-sm font-semibold' 
             : 'text-zinc-500 bg-transparent hover:text-zinc-900 hover:bg-zinc-200/50'
@@ -70,9 +70,9 @@ export const AppSidebar = ({ children }: { children: React.ReactNode }) => {
   };
 
   const sidebarContent = (
-    <aside className="w-[240px] h-full flex flex-col bg-zinc-50 px-4 py-6">
+    <aside className="w-60 h-full flex flex-col bg-zinc-50 px-4 py-6">
       {/* Logo */}
-      <div className="flex items-center gap-[10px] px-3 py-1 mb-8">
+      <div className="flex items-center gap-2.5 px-3 py-1 mb-8">
         <div className="w-8 h-8 bg-zinc-900 rounded-xl flex items-center justify-center shadow-md shadow-zinc-950/10">
           <Cpu size={16} className="text-white" strokeWidth={2.5} />
         </div>
@@ -102,7 +102,7 @@ export const AppSidebar = ({ children }: { children: React.ReactNode }) => {
 
       {/* User footer */}
       <div className="pt-4 mt-4 bg-zinc-100/50 rounded-2xl p-3 shadow-inner">
-        <div className="flex items-center gap-[10px] mb-3 px-1">
+        <div className="flex items-center gap-2.5 mb-3 px-1">
           <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center font-mono text-[11px] font-semibold text-zinc-800 shrink-0">
             {initials}
           </div>
@@ -140,7 +140,7 @@ export const AppSidebar = ({ children }: { children: React.ReactNode }) => {
       {/* Sidebar Desktop/Mobile Wrapper */}
       <div className={`
         fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-out
-        lg:static lg:translate-x-0 lg:h-screen lg:sticky lg:top-0 shrink-0
+        lg:sticky lg:translate-x-0 lg:h-screen lg:sticky lg:top-0 shrink-0
         ${isOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'}
       `}>
         {sidebarContent}

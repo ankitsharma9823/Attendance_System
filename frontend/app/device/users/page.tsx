@@ -103,7 +103,7 @@ export default function MachineUsersPage() {
     {
       header: 'Name',
       accessor: user => editingUser?.userId === user.userId ? (
-        <div className="flex flex-col gap-2 py-1 max-w-[240px]">
+        <div className="flex flex-col gap-2 py-1 max-w-60">
           <input 
             value={newName} 
             onChange={e => setNewName(e.target.value)} 
@@ -139,7 +139,7 @@ export default function MachineUsersPage() {
       accessor: user => {
         const isAdmin = user.role === 14;
         return (
-          <span className={`px-2 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase font-[family-name:var(--font-outfit)] ${
+          <span className={`px-2 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase font-outfit ${
             isAdmin 
               ? 'bg-purple-50 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400' 
               : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
@@ -181,7 +181,7 @@ export default function MachineUsersPage() {
 
   return (
     <AppSidebar>
-      <main className="max-w-300 mx-auto px-4 py-8 md:px-8 font-[family-name:var(--font-outfit)]">
+      <main className="max-w-300 mx-auto px-4 py-8 md:px-8 font-outfit">
         
         {/* Modern Header Grid Row */}
         <header className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-start sm:justify-between">

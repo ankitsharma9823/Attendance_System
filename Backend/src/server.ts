@@ -11,7 +11,7 @@ import { DEVICE_CONFIG } from "./config/device.config";
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 
-const PORT = parseInt(process.env.PORT || "5000", 10);
+const PORT = parseInt(process.env.PORT || "4002", 10);
 const DEVICE_STARTUP_SYNC = process.env.DEVICE_STARTUP_SYNC === "true";
 
 // Helper function to pause execution and let sockets clear

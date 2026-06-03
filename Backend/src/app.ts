@@ -37,7 +37,10 @@ app.use("/api", apiLimiter);
 app.use(
   cors({
     origin: (origin, callback) => callback(null, true), // allow all
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
+    optionsSuccessStatus: 204,
   }),
 );
 
