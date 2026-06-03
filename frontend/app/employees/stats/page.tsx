@@ -35,9 +35,16 @@ interface EmployeeSummary {
 export default function EmployeeStatsPage() {
   const [summaries, setSummaries] = useState<EmployeeSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState<number | null>(null);
 
   useEffect(() => {
+    if (year === null) {
+      setYear(new Date().getFullYear());
+      return;
+    }
+
+    if (year === null) return;
+
     const fetchStats = async () => {
       try {
         setLoading(true);
@@ -129,7 +136,7 @@ export default function EmployeeStatsPage() {
         const total = s.present + s.late + s.halfDay + s.absent;
         const rate = total > 0 ? Math.round(((s.present + s.late) / total) * 100) : 0;
         return (
-          <div className="flex items-center justify-end gap-3 min-w-[120px]">
+          <div className="flex items-center justify-end gap-3 min-w-30">
              <div className="h-1.5 flex-1 bg-muted/30 rounded-full overflow-hidden">
                <div 
                  className="h-full bg-indigo-500 rounded-full transition-all duration-1000" 
@@ -152,10 +159,11 @@ export default function EmployeeStatsPage() {
             <div className="flex items-center gap-3">
                <Calendar size={14} className="text-muted-foreground" />
                <select 
-                 value={year} 
+                 value={year ?? ''} 
                  onChange={(e) => setYear(Number(e.target.value))}
                  className="bg-muted/50 border border-border/50 px-4 py-2 text-xs font-semibold rounded-lg outline-none cursor-pointer hover:bg-muted transition-colors text-foreground"
                >
+                 <option value="" disabled>Select year</option>
                  {Array.from({ length: new Date().getFullYear() - 2020 + 1 }, (_, i) => 2020 + i).reverse().map(y => (
                    <option key={y} value={y}>{y}</option>
                  ))}

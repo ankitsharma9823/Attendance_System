@@ -1,44 +1,61 @@
 'use client';
 
+// Core imports
 import { useEffect, useState, useCallback } from 'react';
 import { AppSidebar } from '@/components/shared/AppSidebar';
 import { apiClient } from '@/lib/api';
 import { WorkRecord } from '@/types';
-import { 
-  Clock, 
-  CheckCircle2, 
-  UserMinus, 
-  Timer
-} from 'lucide-react';
+import { Clock, CheckCircle2, UserMinus, Timer } from 'lucide-react';
 import { getErrorMessage } from '@/lib/get-error-message';
 import { SyncButton } from '@/components/shared/SyncButton';
 import { DataTable, Column } from '@/components/ui/DataTable';
+import { io } from 'socket.io-client';
 
 export default function TodayAttendancePage() {
   const [records, setRecords] = useState<WorkRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  // Selected date for filtering (default to today)
+  const [selectedDate, setSelectedDate] = useState('');
+
+  useEffect(() => {
+    if (!selectedDate) {
+      setSelectedDate(new Date().toISOString().split('T')[0]);
+    }
+  }, [selectedDate]);
 
   const fetchToday = useCallback(async () => {
     try {
-      const res = await apiClient.get(`/attendance/daily?date=${todayStr}`);
+      const res = await apiClient.get(`/attendance/daily?date=${selectedDate}`);
       if (res.data.success) {
         setRecords(res.data.data);
+      } else {
+        setError('Failed to load attendance data');
       }
     } catch (err) {
-      setError(getErrorMessage(err, 'Failed to load today\'s attendance'));
+      setError(getErrorMessage(err, "Failed to load attendance for the selected date"));
     } finally {
       setLoading(false);
     }
-  }, [todayStr]);
+  }, [selectedDate]);
 
   useEffect(() => {
+    if (!selectedDate) return;
+
     fetchToday();
-    const interval = setInterval(fetchToday, 60000); // Auto refresh every minute
-    return () => clearInterval(interval);
-  }, [fetchToday]);
+    // Subscribe to real-time device status updates via socket.io.
+    // Use websocket transport only to avoid HTTP long-polling traffic.
+    const socket = io({ transports: ['websocket'] });
+    socket.on('deviceStatus', (payload) => {
+      if (payload?.date === selectedDate) {
+        fetchToday();
+      }
+    });
+    return () => {
+      socket.disconnect();
+    };
+  }, [fetchToday, selectedDate]);
 
   const stats = {
     present: records.filter(r => r.status === 'PRESENT').length,
@@ -91,12 +108,23 @@ export default function TodayAttendancePage() {
       <main className="mx-auto max-w-7xl px-6 py-12 lg:px-12">
         <header className="mb-14">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Today's Feed</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Attendance</h1>
             <SyncButton onComplete={fetchToday} />
           </div>
           <p className="text-sm text-muted-foreground">
-            Real-time attendance logs for <span className="text-foreground font-medium">{todayStr}</span>
+            Real-time attendance logs for <span className="text-foreground font-medium">{selectedDate}</span>
           </p>
+          {/* Date filter */}
+          <div className="mt-4 flex items-center gap-2">
+            <label htmlFor="dateFilter" className="text-sm font-medium text-muted-foreground">Date:</label>
+            <input
+              type="date"
+              id="dateFilter"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="rounded border border-border/30 bg-card px-2 py-1 text-sm"
+            />
+          </div>
         </header>
 
         <section className="mb-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

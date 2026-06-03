@@ -3,9 +3,10 @@ import { useEffect, useState } from 'react';
 import { AppSidebar } from '@/components/shared/AppSidebar';
 import { apiClient } from '@/lib/api';
 import { toast } from 'sonner';
-import { RefreshCw, Edit3, ShieldX, Trash2, Check, X } from 'lucide-react';
+import { RefreshCw, Edit3, ShieldX, Trash2, Check, X, Download, Upload } from 'lucide-react';
 import { getErrorMessage } from '@/lib/get-error-message';
 import { DataTable, Column } from '@/components/ui/DataTable';
+import { deviceService } from '@/services/device-service';
 
 interface MachineUser { uid: number; userId: string; name: string; role: number; }
 
@@ -15,6 +16,7 @@ export default function MachineUsersPage() {
   const [editingUser, setEditingUser] = useState<MachineUser | null>(null);
   const [newName, setNewName] = useState('');
   const [newRole, setNewRole] = useState(0);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -23,6 +25,37 @@ export default function MachineUsersPage() {
       if (res.data.success) setUsers(res.data.data);
     } catch (err) { toast.error(getErrorMessage(err, 'Failed to fetch users')); }
     finally { setLoading(false); }
+  };
+
+  const handleSyncEmployees = async () => {
+    setActionLoading(true);
+    try {
+      const res = await deviceService.syncEmployees();
+      if (res.success) {
+        toast.success(res.message || 'Imported device users into the database.');
+        fetchUsers();
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to import users from device'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRestoreUsers = async () => {
+    if (!window.confirm('Restore active users from database to the machine? This may overwrite device registry entries.')) return;
+    setActionLoading(true);
+    try {
+      const res = await deviceService.restoreUsersFromDb();
+      if (res.success) {
+        toast.success(res.message || 'Restored users to device from database.');
+        fetchUsers();
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to restore users to device'));
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   useEffect(() => { fetchUsers(); }, []);
@@ -151,19 +184,38 @@ export default function MachineUsersPage() {
       <main className="max-w-300 mx-auto px-4 py-8 md:px-8 font-[family-name:var(--font-outfit)]">
         
         {/* Modern Header Grid Row */}
-        <header className="flex items-start justify-between mb-8">
+        <header className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">Hardware</p>
             <h1 className="text-2xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">Machine Users</h1>
             <p className="mt-1 text-[13px] text-zinc-500 dark:text-zinc-400">Manage users registered on the biometric device.</p>
           </div>
-          <button 
-            onClick={fetchUsers} 
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 shadow-xs border-none transition-all active:scale-95"
-          >
-            <RefreshCw size={13} strokeWidth={2.5} className={loading ? 'animate-spin' : ''} />
-            <span>Refresh</span>
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <button
+              onClick={fetchUsers}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 shadow-xs border-none transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <RefreshCw size={13} strokeWidth={2.5} className={loading ? 'animate-spin' : ''} />
+              <span>Refresh</span>
+            </button>
+            <button
+              onClick={handleSyncEmployees}
+              disabled={actionLoading}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-slate-900 hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-slate-200 shadow-xs border-none transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Upload size={13} />
+              <span>Import users from device</span>
+            </button>
+            <button
+              onClick={handleRestoreUsers}
+              disabled={actionLoading}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 shadow-xs border-none transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Download size={13} />
+              <span>Restore users to device</span>
+            </button>
+          </div>
         </header>
 
         {/* Modular Layout Table Mount */}

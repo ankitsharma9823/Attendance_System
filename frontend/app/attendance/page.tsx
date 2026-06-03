@@ -20,6 +20,8 @@ const fmtOT = (m: number) => {
   return h ? (r ? `${h}h ${r}m` : `${h}h`) : `${r}m`;
 };
 
+const isValidDateString = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
+
 // Updated status badges using the modern zinc/clean system styles instead of arbitrary custom CSS classes
 const statusChip = (status: string) => {
   const styles: Record<string, string> = {
@@ -29,7 +31,7 @@ const statusChip = (status: string) => {
     HALF_DAY: 'bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400',
   };
   return (
-    <span className={`px-2 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase font-[family-name:var(--font-outfit)] ${styles[status] || 'bg-zinc-100 text-zinc-600'}`}>
+    <span className={`px-2 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase font-outfit ${styles[status] || 'bg-zinc-100 text-zinc-600'}`}>
       {status.replace('_', ' ')}
     </span>
   );
@@ -39,15 +41,23 @@ export default function AttendanceDashboard() {
   const [records, setRecords] = useState<WorkRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState(getLocalDate());
+  const [selectedDate, setSelectedDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const getFilters = useCallback(() => ({
-    year: selectedDate ? new Date(`${selectedDate}T00:00:00`).getFullYear() : new Date().getFullYear(),
-    date: selectedDate || undefined,
-    status: statusFilter || undefined,
-  }), [selectedDate, statusFilter]);
+  useEffect(() => {
+    if (!selectedDate) {
+      setSelectedDate(getLocalDate());
+    }
+  }, [selectedDate]);
+
+  const getFilters = useCallback(() => {
+    const date = selectedDate && isValidDateString(selectedDate) ? selectedDate : undefined;
+    return {
+      year: date ? new Date(`${date}T00:00:00`).getFullYear() : new Date().getFullYear(),
+      date,
+    };
+  }, [selectedDate]);
 
   const loadData = useCallback(async () => {
     setLoading(true); setError(null);
@@ -58,16 +68,29 @@ export default function AttendanceDashboard() {
 
   useEffect(() => {
     let ignore = false;
+    if (!selectedDate) {
+      return () => { ignore = true; };
+    }
+
+    if (!isValidDateString(selectedDate)) {
+      setLoading(false);
+      setError('Please select a valid date before filtering attendance.');
+      return () => { ignore = true; };
+    }
+
     (async () => {
       setLoading(true); setError(null);
       try {
         const data = await attendanceService.getAttendance(getFilters());
         if (!ignore) setRecords(data);
-      } catch { if (!ignore) { setRecords([]); setError('Unable to load records.'); } }
-      finally { if (!ignore) setLoading(false); }
+      } catch {
+        if (!ignore) { setRecords([]); setError('Unable to load records.'); }
+      } finally {
+        if (!ignore) setLoading(false);
+      }
     })();
     return () => { ignore = true; };
-  }, [getFilters]);
+  }, [getFilters, selectedDate]);
 
   const fmtTime = (t: string | null) =>
     t ? new Date(t).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—';
@@ -90,28 +113,28 @@ export default function AttendanceDashboard() {
       accessor: r => (
         <div>
           <p className="font-semibold text-[13px] text-zinc-800 dark:text-zinc-200">{r.employee?.name || `ID: ${r.employeeId}`}</p>
-          <p className="font-[family-name:var(--font-mono)] text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">
+          <p className="font-mono text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">
             {r.employee?.department || 'Staff'} · {r.employeeId}
           </p>
         </div>
       ),
     },
-    { header: 'Check In', accessor: r => <span className="font-[family-name:var(--font-mono)]">{fmtTime(r.checkIn)}</span> },
+    { header: 'Check In', accessor: r => <span className="font-mono">{fmtTime(r.checkIn)}</span> },
     {
       header: 'Break',
       accessor: r => (
-        <div className="font-[family-name:var(--font-mono)] text-[11px] text-zinc-400 dark:text-zinc-500 space-y-0.5">
+        <div className="font-mono text-[11px] text-zinc-400 dark:text-zinc-500 space-y-0.5">
           <div>Out: {fmtTime(r.breakOut)}</div>
           <div>In: {fmtTime(r.breakIn)}</div>
         </div>
       ),
     },
-    { header: 'Check Out', accessor: r => <span className="font-[family-name:var(--font-mono)]">{fmtTime(r.checkOut)}</span> },
+    { header: 'Check Out', accessor: r => <span className="font-mono">{fmtTime(r.checkOut)}</span> },
     {
       header: 'OT',
       accessor: r => r.overtime > 0
-        ? <span className="text-zinc-900 dark:text-zinc-50 font-[family-name:var(--font-mono)] text-xs font-bold">+{fmtOT(r.overtime)}</span>
-        : <span className="text-zinc-300 dark:text-zinc-700 font-[family-name:var(--font-mono)]">—</span>,
+        ? <span className="text-zinc-900 dark:text-zinc-50 font-mono text-xs font-bold">+{fmtOT(r.overtime)}</span>
+        : <span className="text-zinc-300 dark:text-zinc-700 font-mono">—</span>,
     },
     { 
       header: 'Status', 
@@ -119,7 +142,7 @@ export default function AttendanceDashboard() {
         <div className="flex flex-col items-start gap-1">
           {statusChip(r.status)}
           {r.isHalfDay && (
-            <span className="px-2 py-0.5 rounded bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400 text-[10px] font-bold uppercase tracking-wide font-[family-name:var(--font-outfit)]">
+            <span className="px-2 py-0.5 rounded bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400 text-[10px] font-bold uppercase tracking-wide font-outfit">
               ½ Day
             </span>
           )}
@@ -132,7 +155,7 @@ export default function AttendanceDashboard() {
         <button 
           onClick={() => void handleDelete(r)} 
           disabled={deletingId === r.id} 
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-zinc-400 hover:text-rose-600 hover:bg-rose-50/50 disabled:opacity-40 transition-all text-xs font-semibold font-[family-name:var(--font-outfit)] active:scale-95"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-zinc-400 hover:text-rose-600 hover:bg-rose-50/50 disabled:opacity-40 transition-all text-xs font-semibold font-outfit active:scale-95"
         >
           <Trash2 size={13} />
           {deletingId === r.id ? 'Deleting…' : 'Delete'}
@@ -141,13 +164,14 @@ export default function AttendanceDashboard() {
     },
   ];
 
-  const presentCount = records.filter(r => r.checkIn).length;
+  const filteredRecords = statusFilter ? records.filter(r => r.status === statusFilter) : records;
+  const presentCount = records.length;
   const issueCount = records.filter(r => r.status !== 'PRESENT').length;
   const totalOT = records.reduce((t, r) => t + (r.overtime || 0), 0);
 
   return (
     <AppSidebar>
-      <main className="max-w-[1200px] mx-auto px-4 py-8 md:px-8 font-[family-name:var(--font-outfit)]">
+      <main className="max-w-300 mx-auto px-4 py-8 md:px-8 font-outfit">
         
         {/* Modern Header block */}
         <header className="mb-8">
@@ -163,9 +187,9 @@ export default function AttendanceDashboard() {
             { label: 'Exceptions', val: issueCount },
             { label: 'Total Overtime', val: fmtOT(totalOT) },
           ].map(s => (
-            <div key={s.label} className="bg-zinc-50 dark:bg-zinc-900 rounded-2xl p-5 shadow-xs flex flex-col justify-between min-h-[90px]">
+            <div key={s.label} className="bg-zinc-50 dark:bg-zinc-900 rounded-2xl p-5 shadow-xs flex flex-col justify-between min-h-22.5">
               <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">{s.label}</p>
-              <p className="text-2xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight font-[family-name:var(--font-mono)] mt-2">{s.val}</p>
+              <p className="text-2xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight font-mono mt-2">{s.val}</p>
             </div>
           ))}
         </div>
@@ -175,7 +199,7 @@ export default function AttendanceDashboard() {
           <select 
             value={statusFilter} 
             onChange={e => setStatusFilter(e.target.value)}
-            className="bg-white dark:bg-zinc-950 px-4 py-2 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 shadow-xs border-none outline-none focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-800 transition-all appearance-none cursor-pointer min-w-[130px]"
+            className="bg-white dark:bg-zinc-950 px-4 py-2 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 shadow-xs border-none outline-none focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-800 transition-all appearance-none cursor-pointer min-w-32.5"
           >
             <option value="">All statuses</option>
             <option value="PRESENT">Present</option>
@@ -187,7 +211,10 @@ export default function AttendanceDashboard() {
           <input 
             type="date" 
             value={selectedDate} 
-            onChange={e => setSelectedDate(e.target.value)}
+            onChange={e => {
+              setSelectedDate(e.target.value);
+              setError(null);
+            }}
             className="bg-white dark:bg-zinc-950 px-4 py-2 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 shadow-xs border-none outline-none focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-800 transition-all cursor-pointer" 
           />
           
@@ -206,7 +233,7 @@ export default function AttendanceDashboard() {
         </div>
 
         {error && (
-          <div className="bg-rose-50 text-rose-600 rounded-xl p-4 mb-6 text-xs font-semibold tracking-wide font-[family-name:var(--font-mono)] shadow-xs">
+          <div className="bg-rose-50 text-rose-600 rounded-xl p-4 mb-6 text-xs font-semibold tracking-wide font-mono shadow-xs">
             {error}
           </div>
         )}
@@ -214,7 +241,7 @@ export default function AttendanceDashboard() {
         {/* Modern Datatable view component mapping */}
         <DataTable 
           columns={columns} 
-          data={records} 
+          data={filteredRecords} 
           loading={loading} 
           rowId={r => r.id}
           emptyMessage={error || 'No records matching current filters.'} 
