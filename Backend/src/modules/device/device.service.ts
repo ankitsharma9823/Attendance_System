@@ -2,6 +2,7 @@ import prisma from "../../config/db";
 import {
   syncWithMachine,
   syncEmployeesFromDevice,
+  syncDeviceUsersFromDatabase,
   getDeviceUsers,
   addDeviceUser,
   updateDeviceUser,
@@ -93,6 +94,10 @@ export class DeviceService {
 
   async updateUser(uid: number, userid: string, name: string, role: number = 0) {
     return await updateDeviceUser(uid, userid, name, role);
+  }
+
+  async syncUsersFromDb() {
+    return await syncDeviceUsersFromDatabase();
   }
 
   // FIX: Parameter typed as 'any' or 'number | typeof NaN' to prevent internal pipeline crash

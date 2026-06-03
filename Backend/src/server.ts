@@ -3,8 +3,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import app from "./app";
-import { setDeviceTime, syncEmployeesFromDevice, syncWithMachine } from "./modules/device/device.engine";
+import { setDeviceTime, syncEmployeesFromDevice, startRealTimeListener } from "./modules/device/device.engine";
+import { loadScheduleCache } from "./services/schedule.service";
+import { scheduleAbsentJob } from "./services/absent.service";
 import { DEVICE_CONFIG } from "./config/device.config";
+
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 
 const PORT = parseInt(process.env.PORT || "5000", 10);
 const DEVICE_STARTUP_SYNC = process.env.DEVICE_STARTUP_SYNC === "true";
@@ -27,40 +32,46 @@ const runDeviceStartup = async () => {
     
     await delay(3000);
 
-    // 3. Pull Logs
-    console.log("[Device Engine] Step 3/3: Fetching historical attendance logs...");
-    const result = await syncWithMachine();
-    console.log("[Device Engine] Sequential boot-up sync completed successfully:", result);
+    // 3. Start Real-Time Listener
+    console.log("[Device Engine] Step 3/3: Initializing real-time punch listener...");
+    startRealTimeListener();
+    console.log("[Device Engine] Sequential boot-up completed successfully.");
 
   } catch (err: any) {
     console.warn("[Device Engine] Startup sequence optimization warning:", err?.message ?? err);
   }
 };
 
-const startServer = () => {
-  app.listen(PORT, async () => {
-    console.log(`Production Core Engine Online on Port ${PORT}`);
-    console.log(`Target Device Configuration: ${DEVICE_CONFIG.IP}:${DEVICE_CONFIG.PORT}`);
+// Create HTTP server from Express app
+const httpServer = http.createServer(app);
+// Initialize Socket.IO on the same server
+export const io = new SocketIOServer(httpServer, {
+  cors: { origin: '*', methods: ['GET', 'POST'] },
+});
 
-    if (DEVICE_STARTUP_SYNC) {
-      await runDeviceStartup();
-    } else {
-      console.log("[Device] Startup sync disabled (DEVICE_STARTUP_SYNC=false). Use POST /api/device/sync.");
-    }
+// Start listening on HTTP server instead of app.listen
+httpServer.listen(PORT, async () => {
+  console.log(`Production Core Engine Online on Port ${PORT}`);
+  console.log(`Target Device Configuration: ${DEVICE_CONFIG.IP}:${DEVICE_CONFIG.PORT}`);
 
-    const autoSync = process.env.DEVICE_AUTO_SYNC === "true";
-    if (autoSync) {
-      console.log(`[System Scheduler] Auto-sync scheduled every ${DEVICE_CONFIG.INTERVAL / 1000}s.`);
-      
-      setInterval(() => {
-        syncWithMachine().catch((err) => {
-          console.warn("[System Scheduler] Sync skipped:", err?.message ?? err);
-        });
-      }, DEVICE_CONFIG.INTERVAL);
-    } else {
-      console.log("[System Scheduler] Auto-sync OFF — manual engine trigger required.");
-    }
-  });
-};
+  // Load schedule cache into memory (zero DB reads on hot path)
+  await loadScheduleCache();
+  console.log("[System] Attendance schedule loaded into memory cache.");
 
-startServer();
+  // Start absent backfill job
+  scheduleAbsentJob();
+
+  if (DEVICE_STARTUP_SYNC) {
+    await runDeviceStartup();
+  } else {
+    console.log("[Device] Startup sync disabled (DEVICE_STARTUP_SYNC=false). Use POST /api/device/sync.");
+  }
+
+  const realtimeEnabled = process.env.DEVICE_AUTO_SYNC === "true" || process.env.DEVICE_REALTIME_SYNC === "true";
+  if (realtimeEnabled && !DEVICE_STARTUP_SYNC) {
+    console.log(`[System Scheduler] Real-time listener starting (Auto-sync is ON).`);
+    startRealTimeListener();
+  } else if (!DEVICE_STARTUP_SYNC) {
+    console.log("[System Scheduler] Real-time listener OFF — manual engine trigger required.");
+  }
+});

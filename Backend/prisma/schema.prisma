@@ -11,6 +11,8 @@ model Employee {
   id         String       @id
   name       String
   department String?
+  isActive   Boolean      @default(true)
+  deviceRole Int          @default(0)
   records    WorkRecord[]
 }
 
@@ -69,4 +71,11 @@ model SyncLog {
   id        Int      @id @default(autoincrement())
   logId     String   @unique // The unique ID provided by the device log
   processedAt DateTime @default(now())
+}
+
+model Holiday {
+  id   Int      @id @default(autoincrement())
+  date DateTime @unique
+  name String
+  type String   @default("public") // "public" or "company"
 }
