@@ -53,24 +53,6 @@ export class DeviceController {
     }
   }
 
-  async syncEmployees(req: Request, res: Response) {
-    try {
-      const result = await deviceService.syncEmployees();
-      return res.status(result.success ? 200 : 400).json(result);
-    } catch (error: any) {
-      return res.status(500).json({ success: false, message: error.message });
-    }
-  }
-
-  async syncUsersFromDb(req: Request, res: Response) {
-    try {
-      const result = await deviceService.syncUsersFromDb();
-      return res.status(result.success ? 200 : 400).json(result);
-    } catch (error: any) {
-      return res.status(500).json({ success: false, message: error.message });
-    }
-  }
-
   async purgeDatabase(req: Request, res: Response) {
     try {
       const counts = await deviceService.purgeDatabase();
@@ -87,15 +69,18 @@ export class DeviceController {
       return res.status(500).json({ success: false, message: error.message });
     }
   }
-
-  async getUsers(req: Request, res: Response) {
-    try {
-      const users = await deviceService.getUsers();
-      return res.status(200).json({ success: true, data: users });
-    } catch (error: any) {
-      return res.status(500).json({ success: false, message: error.message });
-    }
+  
+async getUsers(req: Request, res: Response) {
+  try {
+    const page = parseInt(queryString(req.query["page"]) || "1", 10);
+    const limit = parseInt(queryString(req.query["limit"]) || "10", 10);
+    
+    const result = await deviceService.getUsers(page, limit);
+    return res.status(200).json({ success: true, ...result });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
   }
+}
 
   async addUser(req: Request, res: Response) {
   const { name, role } = req.body;

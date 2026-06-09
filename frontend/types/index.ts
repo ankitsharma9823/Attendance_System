@@ -1,4 +1,13 @@
 export type AttendanceStatus = 'PRESENT' | 'LATE' | 'HALF_DAY' | 'EARLY_LEAVE' | 'ABSENT';
+export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  employeeId: string;
+}
 
 export interface WorkRecord {
   id: number;

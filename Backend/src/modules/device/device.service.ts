@@ -58,11 +58,6 @@ export class DeviceService {
       message: `Next sync will re-import the last ${replay} punch(es) from the device.`,
     };
   }
-
-  async syncEmployees() {
-    return await syncEmployeesFromDevice();
-  }
-
   async purgeDatabase() {
     const nepalNow = getNepaliDate();
     const currentYearStart = new Date(nepalNow.getFullYear(), 0, 1);
@@ -84,9 +79,36 @@ export class DeviceService {
     };
   }
 
-  async getUsers() {
-    return await getDeviceUsers();
-  }
+  // FIXED: Re-added the method wrapper here so TypeScript understands the block context
+ async getUsers(page: number = 1, limit: number = 10) {
+  const skip = (page - 1) * limit;
+
+  const [users, total] = await prisma.$transaction([
+    prisma.employee.findMany({
+      where: { isActive: true },
+      orderBy: { id: "asc" },
+      select: { id: true, name: true, deviceRole: true },
+      skip,
+      take: limit,
+    }),
+    prisma.employee.count({ where: { isActive: true } })
+  ]);
+
+  return {
+    data: users.map((emp) => ({
+      userId: emp.id,
+      name: emp.name,
+      role: emp.deviceRole,
+      uid: parseInt(emp.id, 10) || NaN
+    })),
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    }
+  };
+}
 
   async addUser(name: string, role: number = 0) {
     return await addDeviceUser(name, role);
@@ -96,11 +118,6 @@ export class DeviceService {
     return await updateDeviceUser(uid, userid, name, role);
   }
 
-  async syncUsersFromDb() {
-    return await syncDeviceUsersFromDatabase();
-  }
-
-  // FIX: Parameter typed as 'any' or 'number | typeof NaN' to prevent internal pipeline crash
   async deleteUser(uid: any, userid: string) {
     return await deleteDeviceUser(uid, userid);
   }

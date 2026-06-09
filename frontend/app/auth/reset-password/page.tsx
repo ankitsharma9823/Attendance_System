@@ -9,12 +9,9 @@ export default function ResetPasswordPage() {
         
         {/* Logo and Branding Header */}
         <div className="flex items-center gap-2.5 justify-center mb-6 pt-2">
-          <div className="w-8 h-8 bg-zinc-900 rounded-xl flex items-center justify-center shadow-md shadow-zinc-950/10">
-            <Cpu size={16} className="text-white" strokeWidth={2.5} />
-          </div>
-          <span className="font-extrabold text-[16px] tracking-tight text-zinc-900">
-            Attend<span className="text-zinc-400 font-medium">OS</span>
-          </span>
+            <span className="font-bold text-16px uppercase text-zinc-900 text-xl tracking-wider md:text-2xl">
+          Aara<span className='text-[#964394]'>mbha</span>
+        </span>
         </div>
 
         <div className="text-center mb-6">

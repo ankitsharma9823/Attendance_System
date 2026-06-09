@@ -11,8 +11,6 @@ router.use(authenticate);
 router.post("/sync",           deviceOpsLimiter, (req, res) => deviceController.syncLogs(req, res));
 router.post("/sync-time",      deviceOpsLimiter, (req, res) => deviceController.syncTime(req, res));
 router.post("/reset-cursors",  deviceOpsLimiter, (req, res) => deviceController.resetCursors(req, res));
-router.post("/sync-employees", deviceOpsLimiter, (req, res) => deviceController.syncEmployees(req, res));
-router.post("/sync-from-db", deviceOpsLimiter, (req, res) => deviceController.syncUsersFromDb(req, res));
 router.get( "/machine-time",   deviceOpsLimiter, (req, res) => deviceController.getMachineTime(req, res));
 router.post("/cleanup",        deviceOpsLimiter, (req, res) => deviceController.purgeDatabase(req, res));
 

@@ -7,7 +7,7 @@ if (SECRET === "fallback_secret") {
 const EXPIRES = process.env.JWT_EXPIRES_IN || "1d";
 export const generateToken = (payload: object): string => {
   const options: SignOptions = {
-    expiresIn: EXPIRES as any // 'as any' or casting to specific string types fixes the overload mismatch
+    expiresIn: EXPIRES as any 
   };
   return jwt.sign(payload, SECRET, options);
 };

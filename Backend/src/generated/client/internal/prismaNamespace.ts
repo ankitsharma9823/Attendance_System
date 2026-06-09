@@ -385,8 +385,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   Employee: 'Employee',
-  WorkRecord: 'WorkRecord',
   User: 'User',
+  WorkRecord: 'WorkRecord',
   AttendanceSchedule: 'AttendanceSchedule',
   SyncLog: 'SyncLog',
   Holiday: 'Holiday'
@@ -405,7 +405,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "employee" | "workRecord" | "user" | "attendanceSchedule" | "syncLog" | "holiday"
+    modelProps: "employee" | "user" | "workRecord" | "attendanceSchedule" | "syncLog" | "holiday"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -483,80 +483,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    WorkRecord: {
-      payload: Prisma.$WorkRecordPayload<ExtArgs>
-      fields: Prisma.WorkRecordFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.WorkRecordFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.WorkRecordFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>
-        }
-        findFirst: {
-          args: Prisma.WorkRecordFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.WorkRecordFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>
-        }
-        findMany: {
-          args: Prisma.WorkRecordFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>[]
-        }
-        create: {
-          args: Prisma.WorkRecordCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>
-        }
-        createMany: {
-          args: Prisma.WorkRecordCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.WorkRecordCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>[]
-        }
-        delete: {
-          args: Prisma.WorkRecordDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>
-        }
-        update: {
-          args: Prisma.WorkRecordUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>
-        }
-        deleteMany: {
-          args: Prisma.WorkRecordDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.WorkRecordUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.WorkRecordUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>[]
-        }
-        upsert: {
-          args: Prisma.WorkRecordUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>
-        }
-        aggregate: {
-          args: Prisma.WorkRecordAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateWorkRecord>
-        }
-        groupBy: {
-          args: Prisma.WorkRecordGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.WorkRecordGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.WorkRecordCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.WorkRecordCountAggregateOutputType> | number
-        }
-      }
-    }
     User: {
       payload: Prisma.$UserPayload<ExtArgs>
       fields: Prisma.UserFieldRefs
@@ -628,6 +554,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.UserCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number
+        }
+      }
+    }
+    WorkRecord: {
+      payload: Prisma.$WorkRecordPayload<ExtArgs>
+      fields: Prisma.WorkRecordFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WorkRecordFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WorkRecordFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>
+        }
+        findFirst: {
+          args: Prisma.WorkRecordFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WorkRecordFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>
+        }
+        findMany: {
+          args: Prisma.WorkRecordFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>[]
+        }
+        create: {
+          args: Prisma.WorkRecordCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>
+        }
+        createMany: {
+          args: Prisma.WorkRecordCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WorkRecordCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>[]
+        }
+        delete: {
+          args: Prisma.WorkRecordDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>
+        }
+        update: {
+          args: Prisma.WorkRecordUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>
+        }
+        deleteMany: {
+          args: Prisma.WorkRecordDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WorkRecordUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WorkRecordUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>[]
+        }
+        upsert: {
+          args: Prisma.WorkRecordUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkRecordPayload>
+        }
+        aggregate: {
+          args: Prisma.WorkRecordAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWorkRecord>
+        }
+        groupBy: {
+          args: Prisma.WorkRecordGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WorkRecordGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WorkRecordCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WorkRecordCountAggregateOutputType> | number
         }
       }
     }
@@ -903,6 +903,25 @@ export const EmployeeScalarFieldEnum = {
 export type EmployeeScalarFieldEnum = (typeof EmployeeScalarFieldEnum)[keyof typeof EmployeeScalarFieldEnum]
 
 
+export const UserScalarFieldEnum = {
+  id: 'id',
+  username: 'username',
+  email: 'email',
+  password: 'password',
+  role: 'role',
+  employeeId: 'employeeId',
+  emailVerified: 'emailVerified',
+  emailVerificationCode: 'emailVerificationCode',
+  emailVerificationExpiry: 'emailVerificationExpiry',
+  passwordResetToken: 'passwordResetToken',
+  passwordResetExpiry: 'passwordResetExpiry',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
 export const WorkRecordScalarFieldEnum = {
   id: 'id',
   employeeId: 'employeeId',
@@ -920,24 +939,6 @@ export const WorkRecordScalarFieldEnum = {
 } as const
 
 export type WorkRecordScalarFieldEnum = (typeof WorkRecordScalarFieldEnum)[keyof typeof WorkRecordScalarFieldEnum]
-
-
-export const UserScalarFieldEnum = {
-  id: 'id',
-  username: 'username',
-  email: 'email',
-  password: 'password',
-  role: 'role',
-  emailVerified: 'emailVerified',
-  emailVerificationCode: 'emailVerificationCode',
-  emailVerificationExpiry: 'emailVerificationExpiry',
-  passwordResetToken: 'passwordResetToken',
-  passwordResetExpiry: 'passwordResetExpiry',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
 export const AttendanceScheduleScalarFieldEnum = {
@@ -971,9 +972,14 @@ export type SyncLogScalarFieldEnum = (typeof SyncLogScalarFieldEnum)[keyof typeo
 
 export const HolidayScalarFieldEnum = {
   id: 'id',
-  date: 'date',
-  name: 'name',
-  type: 'type'
+  employeeId: 'employeeId',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  reason: 'reason',
+  status: 'status',
+  adminNote: 'adminNote',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type HolidayScalarFieldEnum = (typeof HolidayScalarFieldEnum)[keyof typeof HolidayScalarFieldEnum]
@@ -1069,6 +1075,20 @@ export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, '
  * Reference to a field of type 'Float[]'
  */
 export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+/**
+ * Reference to a field of type 'RequestStatus'
+ */
+export type EnumRequestStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RequestStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'RequestStatus[]'
+ */
+export type ListEnumRequestStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RequestStatus[]'>
     
 
 /**
@@ -1182,8 +1202,8 @@ export type PrismaClientOptions = ({
 }
 export type GlobalOmitConfig = {
   employee?: Prisma.EmployeeOmit
-  workRecord?: Prisma.WorkRecordOmit
   user?: Prisma.UserOmit
+  workRecord?: Prisma.WorkRecordOmit
   attendanceSchedule?: Prisma.AttendanceScheduleOmit
   syncLog?: Prisma.SyncLogOmit
   holiday?: Prisma.HolidayOmit

@@ -216,7 +216,9 @@ export type EmployeeWhereInput = {
   department?: Prisma.StringNullableFilter<"Employee"> | string | null
   isActive?: Prisma.BoolFilter<"Employee"> | boolean
   deviceRole?: Prisma.IntFilter<"Employee"> | number
+  user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   records?: Prisma.WorkRecordListRelationFilter
+  holidays?: Prisma.HolidayListRelationFilter
 }
 
 export type EmployeeOrderByWithRelationInput = {
@@ -225,7 +227,9 @@ export type EmployeeOrderByWithRelationInput = {
   department?: Prisma.SortOrderInput | Prisma.SortOrder
   isActive?: Prisma.SortOrder
   deviceRole?: Prisma.SortOrder
+  user?: Prisma.UserOrderByWithRelationInput
   records?: Prisma.WorkRecordOrderByRelationAggregateInput
+  holidays?: Prisma.HolidayOrderByRelationAggregateInput
 }
 
 export type EmployeeWhereUniqueInput = Prisma.AtLeast<{
@@ -237,7 +241,9 @@ export type EmployeeWhereUniqueInput = Prisma.AtLeast<{
   department?: Prisma.StringNullableFilter<"Employee"> | string | null
   isActive?: Prisma.BoolFilter<"Employee"> | boolean
   deviceRole?: Prisma.IntFilter<"Employee"> | number
+  user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   records?: Prisma.WorkRecordListRelationFilter
+  holidays?: Prisma.HolidayListRelationFilter
 }, "id">
 
 export type EmployeeOrderByWithAggregationInput = {
@@ -270,7 +276,9 @@ export type EmployeeCreateInput = {
   department?: string | null
   isActive?: boolean
   deviceRole?: number
+  user?: Prisma.UserCreateNestedOneWithoutEmployeeInput
   records?: Prisma.WorkRecordCreateNestedManyWithoutEmployeeInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUncheckedCreateInput = {
@@ -279,7 +287,9 @@ export type EmployeeUncheckedCreateInput = {
   department?: string | null
   isActive?: boolean
   deviceRole?: number
+  user?: Prisma.UserUncheckedCreateNestedOneWithoutEmployeeInput
   records?: Prisma.WorkRecordUncheckedCreateNestedManyWithoutEmployeeInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUpdateInput = {
@@ -288,7 +298,9 @@ export type EmployeeUpdateInput = {
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
+  user?: Prisma.UserUpdateOneWithoutEmployeeNestedInput
   records?: Prisma.WorkRecordUpdateManyWithoutEmployeeNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeUncheckedUpdateInput = {
@@ -297,7 +309,9 @@ export type EmployeeUncheckedUpdateInput = {
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
+  user?: Prisma.UserUncheckedUpdateOneWithoutEmployeeNestedInput
   records?: Prisma.WorkRecordUncheckedUpdateManyWithoutEmployeeNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeCreateManyInput = {
@@ -356,6 +370,11 @@ export type EmployeeSumOrderByAggregateInput = {
   deviceRole?: Prisma.SortOrder
 }
 
+export type EmployeeNullableScalarRelationFilter = {
+  is?: Prisma.EmployeeWhereInput | null
+  isNot?: Prisma.EmployeeWhereInput | null
+}
+
 export type EmployeeScalarRelationFilter = {
   is?: Prisma.EmployeeWhereInput
   isNot?: Prisma.EmployeeWhereInput
@@ -381,6 +400,22 @@ export type IntFieldUpdateOperationsInput = {
   divide?: number
 }
 
+export type EmployeeCreateNestedOneWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.EmployeeCreateWithoutUserInput, Prisma.EmployeeUncheckedCreateWithoutUserInput>
+  connectOrCreate?: Prisma.EmployeeCreateOrConnectWithoutUserInput
+  connect?: Prisma.EmployeeWhereUniqueInput
+}
+
+export type EmployeeUpdateOneWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.EmployeeCreateWithoutUserInput, Prisma.EmployeeUncheckedCreateWithoutUserInput>
+  connectOrCreate?: Prisma.EmployeeCreateOrConnectWithoutUserInput
+  upsert?: Prisma.EmployeeUpsertWithoutUserInput
+  disconnect?: Prisma.EmployeeWhereInput | boolean
+  delete?: Prisma.EmployeeWhereInput | boolean
+  connect?: Prisma.EmployeeWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.EmployeeUpdateToOneWithWhereWithoutUserInput, Prisma.EmployeeUpdateWithoutUserInput>, Prisma.EmployeeUncheckedUpdateWithoutUserInput>
+}
+
 export type EmployeeCreateNestedOneWithoutRecordsInput = {
   create?: Prisma.XOR<Prisma.EmployeeCreateWithoutRecordsInput, Prisma.EmployeeUncheckedCreateWithoutRecordsInput>
   connectOrCreate?: Prisma.EmployeeCreateOrConnectWithoutRecordsInput
@@ -395,12 +430,84 @@ export type EmployeeUpdateOneRequiredWithoutRecordsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.EmployeeUpdateToOneWithWhereWithoutRecordsInput, Prisma.EmployeeUpdateWithoutRecordsInput>, Prisma.EmployeeUncheckedUpdateWithoutRecordsInput>
 }
 
+export type EmployeeCreateNestedOneWithoutHolidaysInput = {
+  create?: Prisma.XOR<Prisma.EmployeeCreateWithoutHolidaysInput, Prisma.EmployeeUncheckedCreateWithoutHolidaysInput>
+  connectOrCreate?: Prisma.EmployeeCreateOrConnectWithoutHolidaysInput
+  connect?: Prisma.EmployeeWhereUniqueInput
+}
+
+export type EmployeeUpdateOneRequiredWithoutHolidaysNestedInput = {
+  create?: Prisma.XOR<Prisma.EmployeeCreateWithoutHolidaysInput, Prisma.EmployeeUncheckedCreateWithoutHolidaysInput>
+  connectOrCreate?: Prisma.EmployeeCreateOrConnectWithoutHolidaysInput
+  upsert?: Prisma.EmployeeUpsertWithoutHolidaysInput
+  connect?: Prisma.EmployeeWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.EmployeeUpdateToOneWithWhereWithoutHolidaysInput, Prisma.EmployeeUpdateWithoutHolidaysInput>, Prisma.EmployeeUncheckedUpdateWithoutHolidaysInput>
+}
+
+export type EmployeeCreateWithoutUserInput = {
+  id: string
+  name: string
+  department?: string | null
+  isActive?: boolean
+  deviceRole?: number
+  records?: Prisma.WorkRecordCreateNestedManyWithoutEmployeeInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutEmployeeInput
+}
+
+export type EmployeeUncheckedCreateWithoutUserInput = {
+  id: string
+  name: string
+  department?: string | null
+  isActive?: boolean
+  deviceRole?: number
+  records?: Prisma.WorkRecordUncheckedCreateNestedManyWithoutEmployeeInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutEmployeeInput
+}
+
+export type EmployeeCreateOrConnectWithoutUserInput = {
+  where: Prisma.EmployeeWhereUniqueInput
+  create: Prisma.XOR<Prisma.EmployeeCreateWithoutUserInput, Prisma.EmployeeUncheckedCreateWithoutUserInput>
+}
+
+export type EmployeeUpsertWithoutUserInput = {
+  update: Prisma.XOR<Prisma.EmployeeUpdateWithoutUserInput, Prisma.EmployeeUncheckedUpdateWithoutUserInput>
+  create: Prisma.XOR<Prisma.EmployeeCreateWithoutUserInput, Prisma.EmployeeUncheckedCreateWithoutUserInput>
+  where?: Prisma.EmployeeWhereInput
+}
+
+export type EmployeeUpdateToOneWithWhereWithoutUserInput = {
+  where?: Prisma.EmployeeWhereInput
+  data: Prisma.XOR<Prisma.EmployeeUpdateWithoutUserInput, Prisma.EmployeeUncheckedUpdateWithoutUserInput>
+}
+
+export type EmployeeUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
+  records?: Prisma.WorkRecordUpdateManyWithoutEmployeeNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutEmployeeNestedInput
+}
+
+export type EmployeeUncheckedUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
+  records?: Prisma.WorkRecordUncheckedUpdateManyWithoutEmployeeNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutEmployeeNestedInput
+}
+
 export type EmployeeCreateWithoutRecordsInput = {
   id: string
   name: string
   department?: string | null
   isActive?: boolean
   deviceRole?: number
+  user?: Prisma.UserCreateNestedOneWithoutEmployeeInput
+  holidays?: Prisma.HolidayCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeUncheckedCreateWithoutRecordsInput = {
@@ -409,6 +516,8 @@ export type EmployeeUncheckedCreateWithoutRecordsInput = {
   department?: string | null
   isActive?: boolean
   deviceRole?: number
+  user?: Prisma.UserUncheckedCreateNestedOneWithoutEmployeeInput
+  holidays?: Prisma.HolidayUncheckedCreateNestedManyWithoutEmployeeInput
 }
 
 export type EmployeeCreateOrConnectWithoutRecordsInput = {
@@ -433,6 +542,8 @@ export type EmployeeUpdateWithoutRecordsInput = {
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
+  user?: Prisma.UserUpdateOneWithoutEmployeeNestedInput
+  holidays?: Prisma.HolidayUpdateManyWithoutEmployeeNestedInput
 }
 
 export type EmployeeUncheckedUpdateWithoutRecordsInput = {
@@ -441,6 +552,64 @@ export type EmployeeUncheckedUpdateWithoutRecordsInput = {
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
+  user?: Prisma.UserUncheckedUpdateOneWithoutEmployeeNestedInput
+  holidays?: Prisma.HolidayUncheckedUpdateManyWithoutEmployeeNestedInput
+}
+
+export type EmployeeCreateWithoutHolidaysInput = {
+  id: string
+  name: string
+  department?: string | null
+  isActive?: boolean
+  deviceRole?: number
+  user?: Prisma.UserCreateNestedOneWithoutEmployeeInput
+  records?: Prisma.WorkRecordCreateNestedManyWithoutEmployeeInput
+}
+
+export type EmployeeUncheckedCreateWithoutHolidaysInput = {
+  id: string
+  name: string
+  department?: string | null
+  isActive?: boolean
+  deviceRole?: number
+  user?: Prisma.UserUncheckedCreateNestedOneWithoutEmployeeInput
+  records?: Prisma.WorkRecordUncheckedCreateNestedManyWithoutEmployeeInput
+}
+
+export type EmployeeCreateOrConnectWithoutHolidaysInput = {
+  where: Prisma.EmployeeWhereUniqueInput
+  create: Prisma.XOR<Prisma.EmployeeCreateWithoutHolidaysInput, Prisma.EmployeeUncheckedCreateWithoutHolidaysInput>
+}
+
+export type EmployeeUpsertWithoutHolidaysInput = {
+  update: Prisma.XOR<Prisma.EmployeeUpdateWithoutHolidaysInput, Prisma.EmployeeUncheckedUpdateWithoutHolidaysInput>
+  create: Prisma.XOR<Prisma.EmployeeCreateWithoutHolidaysInput, Prisma.EmployeeUncheckedCreateWithoutHolidaysInput>
+  where?: Prisma.EmployeeWhereInput
+}
+
+export type EmployeeUpdateToOneWithWhereWithoutHolidaysInput = {
+  where?: Prisma.EmployeeWhereInput
+  data: Prisma.XOR<Prisma.EmployeeUpdateWithoutHolidaysInput, Prisma.EmployeeUncheckedUpdateWithoutHolidaysInput>
+}
+
+export type EmployeeUpdateWithoutHolidaysInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
+  user?: Prisma.UserUpdateOneWithoutEmployeeNestedInput
+  records?: Prisma.WorkRecordUpdateManyWithoutEmployeeNestedInput
+}
+
+export type EmployeeUncheckedUpdateWithoutHolidaysInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deviceRole?: Prisma.IntFieldUpdateOperationsInput | number
+  user?: Prisma.UserUncheckedUpdateOneWithoutEmployeeNestedInput
+  records?: Prisma.WorkRecordUncheckedUpdateManyWithoutEmployeeNestedInput
 }
 
 
@@ -450,10 +619,12 @@ export type EmployeeUncheckedUpdateWithoutRecordsInput = {
 
 export type EmployeeCountOutputType = {
   records: number
+  holidays: number
 }
 
 export type EmployeeCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   records?: boolean | EmployeeCountOutputTypeCountRecordsArgs
+  holidays?: boolean | EmployeeCountOutputTypeCountHolidaysArgs
 }
 
 /**
@@ -473,6 +644,13 @@ export type EmployeeCountOutputTypeCountRecordsArgs<ExtArgs extends runtime.Type
   where?: Prisma.WorkRecordWhereInput
 }
 
+/**
+ * EmployeeCountOutputType without action
+ */
+export type EmployeeCountOutputTypeCountHolidaysArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.HolidayWhereInput
+}
+
 
 export type EmployeeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -480,7 +658,9 @@ export type EmployeeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   department?: boolean
   isActive?: boolean
   deviceRole?: boolean
+  user?: boolean | Prisma.Employee$userArgs<ExtArgs>
   records?: boolean | Prisma.Employee$recordsArgs<ExtArgs>
+  holidays?: boolean | Prisma.Employee$holidaysArgs<ExtArgs>
   _count?: boolean | Prisma.EmployeeCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["employee"]>
 
@@ -510,7 +690,9 @@ export type EmployeeSelectScalar = {
 
 export type EmployeeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "department" | "isActive" | "deviceRole", ExtArgs["result"]["employee"]>
 export type EmployeeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  user?: boolean | Prisma.Employee$userArgs<ExtArgs>
   records?: boolean | Prisma.Employee$recordsArgs<ExtArgs>
+  holidays?: boolean | Prisma.Employee$holidaysArgs<ExtArgs>
   _count?: boolean | Prisma.EmployeeCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type EmployeeIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -519,7 +701,9 @@ export type EmployeeIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
 export type $EmployeePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Employee"
   objects: {
+    user: Prisma.$UserPayload<ExtArgs> | null
     records: Prisma.$WorkRecordPayload<ExtArgs>[]
+    holidays: Prisma.$HolidayPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -921,7 +1105,9 @@ readonly fields: EmployeeFieldRefs;
  */
 export interface Prisma__EmployeeClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  user<T extends Prisma.Employee$userArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Employee$userArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   records<T extends Prisma.Employee$recordsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Employee$recordsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  holidays<T extends Prisma.Employee$holidaysArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Employee$holidaysArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$HolidayPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1349,6 +1535,25 @@ export type EmployeeDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
 }
 
 /**
+ * Employee.user
+ */
+export type Employee$userArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
+}
+
+/**
  * Employee.records
  */
 export type Employee$recordsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1370,6 +1575,30 @@ export type Employee$recordsArgs<ExtArgs extends runtime.Types.Extensions.Intern
   take?: number
   skip?: number
   distinct?: Prisma.WorkRecordScalarFieldEnum | Prisma.WorkRecordScalarFieldEnum[]
+}
+
+/**
+ * Employee.holidays
+ */
+export type Employee$holidaysArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Holiday
+   */
+  select?: Prisma.HolidaySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Holiday
+   */
+  omit?: Prisma.HolidayOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayInclude<ExtArgs> | null
+  where?: Prisma.HolidayWhereInput
+  orderBy?: Prisma.HolidayOrderByWithRelationInput | Prisma.HolidayOrderByWithRelationInput[]
+  cursor?: Prisma.HolidayWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.HolidayScalarFieldEnum | Prisma.HolidayScalarFieldEnum[]
 }
 
 /**

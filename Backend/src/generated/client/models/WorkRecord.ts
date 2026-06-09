@@ -594,14 +594,6 @@ export type WorkRecordUncheckedUpdateManyWithoutEmployeeNestedInput = {
   deleteMany?: Prisma.WorkRecordScalarWhereInput | Prisma.WorkRecordScalarWhereInput[]
 }
 
-export type DateTimeFieldUpdateOperationsInput = {
-  set?: Date | string
-}
-
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type FloatFieldUpdateOperationsInput = {
   set?: number
   increment?: number

@@ -103,7 +103,7 @@ export const LoginForm: React.FC = () => {
       {/* Password Input Field Group */}
       <div className="flex flex-col gap-1.5">
         <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">
-          Access credential
+          Password
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-zinc-400">
@@ -161,7 +161,7 @@ export const LoginForm: React.FC = () => {
           href="/auth/forgot-password"
           className="text-xs font-semibold text-zinc-400 hover:text-zinc-900 transition-colors duration-200"
         >
-          Forgot credentials?
+          Forgot Password?
         </a>
       </div>
     </form>

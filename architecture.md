@@ -52,6 +52,215 @@ The system is designed to keep attendances and machine users backed up in the da
 - It listens for `deviceStatus` events
 - When a device status event matches the current date, the frontend refreshes attendance data
 
+## WebSocket architecture
+
+The project uses WebSocket through Socket.IO only for frontend live updates. It does not use WebSocket to connect to the biometric machine.
+
+```txt
+Biometric Machine
+  |
+  | node-zklib TCP socket
+  v
+Backend device.engine.ts
+  |
+  | raw punch data
+  v
+PunchService.handlePunch(...)
+  |
+  | validate + save WorkRecord
+  v
+PostgreSQL Database
+  |
+  | io.emit("deviceStatus", payload)
+  v
+Socket.IO server
+  |
+  | WebSocket event
+  v
+Frontend attendance page
+  |
+  | fetchToday()
+  v
+GET /api/attendance/daily?date=...
+```
+
+### Socket.IO server
+
+The Socket.IO server is created in `Backend/src/server.ts`.
+
+```ts
+const httpServer = http.createServer(app);
+
+export const io = new SocketIOServer(httpServer, {
+  cors: { origin: '*', methods: ['GET', 'POST'] },
+});
+```
+
+The backend uses `httpServer.listen(...)` instead of `app.listen(...)` because Socket.IO must attach to the HTTP server. Express API routes and Socket.IO run on the same backend port.
+
+### Frontend socket connection
+
+The frontend connection is opened in `frontend/app/attendance/today/page.tsx`.
+
+```ts
+const socket = io({ transports: ['websocket'] });
+```
+
+This creates a live browser-to-backend connection while the attendance page is mounted.
+
+```txt
+Frontend browser <-> Backend Socket.IO server
+```
+
+When the user leaves the page, the frontend closes the connection.
+
+```ts
+return () => {
+  socket.disconnect();
+};
+```
+
+### Trigger point
+
+The WebSocket trigger point is in `Backend/src/services/punch.service.ts`.
+
+```ts
+io.emit("deviceStatus", {
+  employeeId,
+  date: dateUTC,
+  status: upsertData.status ?? status,
+});
+```
+
+This line runs after a punch is accepted and the `WorkRecord` is saved or updated in the database.
+
+The trigger means:
+
+```txt
+Attendance changed for an employee/date/status.
+Notify connected frontend clients.
+```
+
+### Event name and payload
+
+The event name is:
+
+```txt
+deviceStatus
+```
+
+The backend sends this payload:
+
+```ts
+{
+  employeeId,
+  date,
+  status
+}
+```
+
+The payload is a notification payload, not the full attendance table. The database remains the source of truth.
+
+### Frontend listener
+
+The frontend listens for the same event name.
+
+```ts
+socket.on('deviceStatus', (payload) => {
+  if (payload?.date === selectedDate) {
+    fetchToday();
+  }
+});
+```
+
+When the event date matches the selected date, the frontend reloads attendance using the normal REST API.
+
+```txt
+Socket event received
+  -> fetchToday()
+  -> GET /api/attendance/daily?date=selectedDate
+  -> update React state
+  -> table refreshes
+```
+
+### Current communication direction
+
+The current Socket.IO usage is one-way:
+
+```txt
+Backend -> Frontend
+```
+
+The frontend listens for events, but it does not emit socket events back to the backend.
+
+### Broadcast behavior
+
+The backend currently uses:
+
+```ts
+io.emit("deviceStatus", payload);
+```
+
+This broadcasts the event to every connected frontend client.
+
+```txt
+All open attendance pages receive the event.
+```
+
+The project does not currently use Socket.IO rooms.
+
+```txt
+No socket.join(...)
+No io.to(room).emit(...)
+No admin-only or department-only socket channel
+```
+
+Rooms can be added later if events should only go to specific users, roles, departments, or classes.
+
+### WebSocket vs device socket
+
+There are two different socket concepts in this project.
+
+```txt
+Backend <-> Frontend
+Uses Socket.IO WebSocket
+Purpose: notify frontend that attendance changed
+
+Backend <-> Biometric Machine
+Uses node-zklib TCP socket
+Purpose: read punches and manage device data
+```
+
+The biometric machine does not connect to Socket.IO. The frontend does not connect directly to the biometric machine. The backend is the bridge between both sides.
+
+### Debouncing consideration
+
+If many punches arrive quickly, the backend may emit many `deviceStatus` events. Without debouncing, the frontend can call `fetchToday()` many times.
+
+```txt
+10 quick punches
+  -> 10 socket events
+  -> 10 API refreshes
+```
+
+A debounce on the frontend can reduce this.
+
+```txt
+10 quick punches
+  -> wait briefly
+  -> 1 API refresh
+```
+
+Debouncing is useful because the socket is only a notification layer. The expensive part is the follow-up REST API refresh.
+
+### Recommended production improvements
+
+- Send the socket date as a `YYYY-MM-DD` string so it matches `selectedDate` reliably.
+- Add frontend debounce around `fetchToday()` to avoid repeated API calls during punch bursts.
+- Restrict Socket.IO CORS origin to the real frontend domain instead of `'*'`.
+- Add rooms later only if events need to be scoped by role, department, class, or tenant.
+- Keep the database and REST API as the source of truth; do not make the socket payload the only attendance data source.
+
 ## Manual sync operations
 
 ### Attendance sync button

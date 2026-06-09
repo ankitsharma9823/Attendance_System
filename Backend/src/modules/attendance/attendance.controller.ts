@@ -118,3 +118,30 @@ export const deleteRecord = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: e.message });
   }
 };
+
+export const updateAttendanceStatus = async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    const { status } = req.body;
+
+    if (isNaN(id)) {
+      return res.status(400).json({ success: false, message: "Valid record id required" });
+    }
+
+    const validStatuses = ["PRESENT", "LATE", "ABSENT", "HALF_DAY", "EARLY_LEAVE"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status value provided" });
+    }
+
+    const updatedRecord = await prisma.workRecord.update({
+      where: { id },
+      data: { status },
+      include: { employee: true }
+    });
+
+    res.json({ success: true, message: "Status updated successfully", data: updatedRecord });
+  } catch (e: any) {
+    console.error("[Attendance] updateAttendanceStatus error:", e);
+    res.status(500).json({ success: false, message: e.message });
+  }
+};

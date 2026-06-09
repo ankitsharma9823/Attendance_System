@@ -23,15 +23,15 @@ export * from './enums';
  */
 export type Employee = Prisma.EmployeeModel
 /**
- * Model WorkRecord
- * 
- */
-export type WorkRecord = Prisma.WorkRecordModel
-/**
  * Model User
  * 
  */
 export type User = Prisma.UserModel
+/**
+ * Model WorkRecord
+ * 
+ */
+export type WorkRecord = Prisma.WorkRecordModel
 /**
  * Model AttendanceSchedule
  * 

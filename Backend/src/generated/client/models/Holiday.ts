@@ -36,23 +36,38 @@ export type HolidaySumAggregateOutputType = {
 
 export type HolidayMinAggregateOutputType = {
   id: number | null
-  date: Date | null
-  name: string | null
-  type: string | null
+  employeeId: string | null
+  startDate: Date | null
+  endDate: Date | null
+  reason: string | null
+  status: $Enums.RequestStatus | null
+  adminNote: string | null
+  createdAt: Date | null
+  updatedAt: Date | null
 }
 
 export type HolidayMaxAggregateOutputType = {
   id: number | null
-  date: Date | null
-  name: string | null
-  type: string | null
+  employeeId: string | null
+  startDate: Date | null
+  endDate: Date | null
+  reason: string | null
+  status: $Enums.RequestStatus | null
+  adminNote: string | null
+  createdAt: Date | null
+  updatedAt: Date | null
 }
 
 export type HolidayCountAggregateOutputType = {
   id: number
-  date: number
-  name: number
-  type: number
+  employeeId: number
+  startDate: number
+  endDate: number
+  reason: number
+  status: number
+  adminNote: number
+  createdAt: number
+  updatedAt: number
   _all: number
 }
 
@@ -67,23 +82,38 @@ export type HolidaySumAggregateInputType = {
 
 export type HolidayMinAggregateInputType = {
   id?: true
-  date?: true
-  name?: true
-  type?: true
+  employeeId?: true
+  startDate?: true
+  endDate?: true
+  reason?: true
+  status?: true
+  adminNote?: true
+  createdAt?: true
+  updatedAt?: true
 }
 
 export type HolidayMaxAggregateInputType = {
   id?: true
-  date?: true
-  name?: true
-  type?: true
+  employeeId?: true
+  startDate?: true
+  endDate?: true
+  reason?: true
+  status?: true
+  adminNote?: true
+  createdAt?: true
+  updatedAt?: true
 }
 
 export type HolidayCountAggregateInputType = {
   id?: true
-  date?: true
-  name?: true
-  type?: true
+  employeeId?: true
+  startDate?: true
+  endDate?: true
+  reason?: true
+  status?: true
+  adminNote?: true
+  createdAt?: true
+  updatedAt?: true
   _all?: true
 }
 
@@ -175,9 +205,14 @@ export type HolidayGroupByArgs<ExtArgs extends runtime.Types.Extensions.Internal
 
 export type HolidayGroupByOutputType = {
   id: number
-  date: Date
-  name: string
-  type: string
+  employeeId: string
+  startDate: Date
+  endDate: Date
+  reason: string | null
+  status: $Enums.RequestStatus
+  adminNote: string | null
+  createdAt: Date
+  updatedAt: Date
   _count: HolidayCountAggregateOutputType | null
   _avg: HolidayAvgAggregateOutputType | null
   _sum: HolidaySumAggregateOutputType | null
@@ -205,33 +240,56 @@ export type HolidayWhereInput = {
   OR?: Prisma.HolidayWhereInput[]
   NOT?: Prisma.HolidayWhereInput | Prisma.HolidayWhereInput[]
   id?: Prisma.IntFilter<"Holiday"> | number
-  date?: Prisma.DateTimeFilter<"Holiday"> | Date | string
-  name?: Prisma.StringFilter<"Holiday"> | string
-  type?: Prisma.StringFilter<"Holiday"> | string
+  employeeId?: Prisma.StringFilter<"Holiday"> | string
+  startDate?: Prisma.DateTimeFilter<"Holiday"> | Date | string
+  endDate?: Prisma.DateTimeFilter<"Holiday"> | Date | string
+  reason?: Prisma.StringNullableFilter<"Holiday"> | string | null
+  status?: Prisma.EnumRequestStatusFilter<"Holiday"> | $Enums.RequestStatus
+  adminNote?: Prisma.StringNullableFilter<"Holiday"> | string | null
+  createdAt?: Prisma.DateTimeFilter<"Holiday"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Holiday"> | Date | string
+  employee?: Prisma.XOR<Prisma.EmployeeScalarRelationFilter, Prisma.EmployeeWhereInput>
 }
 
 export type HolidayOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  date?: Prisma.SortOrder
-  name?: Prisma.SortOrder
-  type?: Prisma.SortOrder
+  employeeId?: Prisma.SortOrder
+  startDate?: Prisma.SortOrder
+  endDate?: Prisma.SortOrder
+  reason?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrder
+  adminNote?: Prisma.SortOrderInput | Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
+  employee?: Prisma.EmployeeOrderByWithRelationInput
 }
 
 export type HolidayWhereUniqueInput = Prisma.AtLeast<{
   id?: number
-  date?: Date | string
   AND?: Prisma.HolidayWhereInput | Prisma.HolidayWhereInput[]
   OR?: Prisma.HolidayWhereInput[]
   NOT?: Prisma.HolidayWhereInput | Prisma.HolidayWhereInput[]
-  name?: Prisma.StringFilter<"Holiday"> | string
-  type?: Prisma.StringFilter<"Holiday"> | string
-}, "id" | "date">
+  employeeId?: Prisma.StringFilter<"Holiday"> | string
+  startDate?: Prisma.DateTimeFilter<"Holiday"> | Date | string
+  endDate?: Prisma.DateTimeFilter<"Holiday"> | Date | string
+  reason?: Prisma.StringNullableFilter<"Holiday"> | string | null
+  status?: Prisma.EnumRequestStatusFilter<"Holiday"> | $Enums.RequestStatus
+  adminNote?: Prisma.StringNullableFilter<"Holiday"> | string | null
+  createdAt?: Prisma.DateTimeFilter<"Holiday"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Holiday"> | Date | string
+  employee?: Prisma.XOR<Prisma.EmployeeScalarRelationFilter, Prisma.EmployeeWhereInput>
+}, "id">
 
 export type HolidayOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  date?: Prisma.SortOrder
-  name?: Prisma.SortOrder
-  type?: Prisma.SortOrder
+  employeeId?: Prisma.SortOrder
+  startDate?: Prisma.SortOrder
+  endDate?: Prisma.SortOrder
+  reason?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrder
+  adminNote?: Prisma.SortOrderInput | Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   _count?: Prisma.HolidayCountOrderByAggregateInput
   _avg?: Prisma.HolidayAvgOrderByAggregateInput
   _max?: Prisma.HolidayMaxOrderByAggregateInput
@@ -244,62 +302,116 @@ export type HolidayScalarWhereWithAggregatesInput = {
   OR?: Prisma.HolidayScalarWhereWithAggregatesInput[]
   NOT?: Prisma.HolidayScalarWhereWithAggregatesInput | Prisma.HolidayScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"Holiday"> | number
-  date?: Prisma.DateTimeWithAggregatesFilter<"Holiday"> | Date | string
-  name?: Prisma.StringWithAggregatesFilter<"Holiday"> | string
-  type?: Prisma.StringWithAggregatesFilter<"Holiday"> | string
+  employeeId?: Prisma.StringWithAggregatesFilter<"Holiday"> | string
+  startDate?: Prisma.DateTimeWithAggregatesFilter<"Holiday"> | Date | string
+  endDate?: Prisma.DateTimeWithAggregatesFilter<"Holiday"> | Date | string
+  reason?: Prisma.StringNullableWithAggregatesFilter<"Holiday"> | string | null
+  status?: Prisma.EnumRequestStatusWithAggregatesFilter<"Holiday"> | $Enums.RequestStatus
+  adminNote?: Prisma.StringNullableWithAggregatesFilter<"Holiday"> | string | null
+  createdAt?: Prisma.DateTimeWithAggregatesFilter<"Holiday"> | Date | string
+  updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Holiday"> | Date | string
 }
 
 export type HolidayCreateInput = {
-  date: Date | string
-  name: string
-  type?: string
+  startDate: Date | string
+  endDate: Date | string
+  reason?: string | null
+  status?: $Enums.RequestStatus
+  adminNote?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  employee: Prisma.EmployeeCreateNestedOneWithoutHolidaysInput
 }
 
 export type HolidayUncheckedCreateInput = {
   id?: number
-  date: Date | string
-  name: string
-  type?: string
+  employeeId: string
+  startDate: Date | string
+  endDate: Date | string
+  reason?: string | null
+  status?: $Enums.RequestStatus
+  adminNote?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type HolidayUpdateInput = {
-  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.StringFieldUpdateOperationsInput | string
+  startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+  adminNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  employee?: Prisma.EmployeeUpdateOneRequiredWithoutHolidaysNestedInput
 }
 
 export type HolidayUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.StringFieldUpdateOperationsInput | string
+  employeeId?: Prisma.StringFieldUpdateOperationsInput | string
+  startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+  adminNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type HolidayCreateManyInput = {
   id?: number
-  date: Date | string
-  name: string
-  type?: string
+  employeeId: string
+  startDate: Date | string
+  endDate: Date | string
+  reason?: string | null
+  status?: $Enums.RequestStatus
+  adminNote?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type HolidayUpdateManyMutationInput = {
-  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.StringFieldUpdateOperationsInput | string
+  startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+  adminNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type HolidayUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.StringFieldUpdateOperationsInput | string
+  employeeId?: Prisma.StringFieldUpdateOperationsInput | string
+  startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+  adminNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type HolidayListRelationFilter = {
+  every?: Prisma.HolidayWhereInput
+  some?: Prisma.HolidayWhereInput
+  none?: Prisma.HolidayWhereInput
+}
+
+export type HolidayOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type HolidayCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  date?: Prisma.SortOrder
-  name?: Prisma.SortOrder
-  type?: Prisma.SortOrder
+  employeeId?: Prisma.SortOrder
+  startDate?: Prisma.SortOrder
+  endDate?: Prisma.SortOrder
+  reason?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  adminNote?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type HolidayAvgOrderByAggregateInput = {
@@ -308,62 +420,262 @@ export type HolidayAvgOrderByAggregateInput = {
 
 export type HolidayMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  date?: Prisma.SortOrder
-  name?: Prisma.SortOrder
-  type?: Prisma.SortOrder
+  employeeId?: Prisma.SortOrder
+  startDate?: Prisma.SortOrder
+  endDate?: Prisma.SortOrder
+  reason?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  adminNote?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type HolidayMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  date?: Prisma.SortOrder
-  name?: Prisma.SortOrder
-  type?: Prisma.SortOrder
+  employeeId?: Prisma.SortOrder
+  startDate?: Prisma.SortOrder
+  endDate?: Prisma.SortOrder
+  reason?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  adminNote?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type HolidaySumOrderByAggregateInput = {
   id?: Prisma.SortOrder
 }
 
+export type HolidayCreateNestedManyWithoutEmployeeInput = {
+  create?: Prisma.XOR<Prisma.HolidayCreateWithoutEmployeeInput, Prisma.HolidayUncheckedCreateWithoutEmployeeInput> | Prisma.HolidayCreateWithoutEmployeeInput[] | Prisma.HolidayUncheckedCreateWithoutEmployeeInput[]
+  connectOrCreate?: Prisma.HolidayCreateOrConnectWithoutEmployeeInput | Prisma.HolidayCreateOrConnectWithoutEmployeeInput[]
+  createMany?: Prisma.HolidayCreateManyEmployeeInputEnvelope
+  connect?: Prisma.HolidayWhereUniqueInput | Prisma.HolidayWhereUniqueInput[]
+}
+
+export type HolidayUncheckedCreateNestedManyWithoutEmployeeInput = {
+  create?: Prisma.XOR<Prisma.HolidayCreateWithoutEmployeeInput, Prisma.HolidayUncheckedCreateWithoutEmployeeInput> | Prisma.HolidayCreateWithoutEmployeeInput[] | Prisma.HolidayUncheckedCreateWithoutEmployeeInput[]
+  connectOrCreate?: Prisma.HolidayCreateOrConnectWithoutEmployeeInput | Prisma.HolidayCreateOrConnectWithoutEmployeeInput[]
+  createMany?: Prisma.HolidayCreateManyEmployeeInputEnvelope
+  connect?: Prisma.HolidayWhereUniqueInput | Prisma.HolidayWhereUniqueInput[]
+}
+
+export type HolidayUpdateManyWithoutEmployeeNestedInput = {
+  create?: Prisma.XOR<Prisma.HolidayCreateWithoutEmployeeInput, Prisma.HolidayUncheckedCreateWithoutEmployeeInput> | Prisma.HolidayCreateWithoutEmployeeInput[] | Prisma.HolidayUncheckedCreateWithoutEmployeeInput[]
+  connectOrCreate?: Prisma.HolidayCreateOrConnectWithoutEmployeeInput | Prisma.HolidayCreateOrConnectWithoutEmployeeInput[]
+  upsert?: Prisma.HolidayUpsertWithWhereUniqueWithoutEmployeeInput | Prisma.HolidayUpsertWithWhereUniqueWithoutEmployeeInput[]
+  createMany?: Prisma.HolidayCreateManyEmployeeInputEnvelope
+  set?: Prisma.HolidayWhereUniqueInput | Prisma.HolidayWhereUniqueInput[]
+  disconnect?: Prisma.HolidayWhereUniqueInput | Prisma.HolidayWhereUniqueInput[]
+  delete?: Prisma.HolidayWhereUniqueInput | Prisma.HolidayWhereUniqueInput[]
+  connect?: Prisma.HolidayWhereUniqueInput | Prisma.HolidayWhereUniqueInput[]
+  update?: Prisma.HolidayUpdateWithWhereUniqueWithoutEmployeeInput | Prisma.HolidayUpdateWithWhereUniqueWithoutEmployeeInput[]
+  updateMany?: Prisma.HolidayUpdateManyWithWhereWithoutEmployeeInput | Prisma.HolidayUpdateManyWithWhereWithoutEmployeeInput[]
+  deleteMany?: Prisma.HolidayScalarWhereInput | Prisma.HolidayScalarWhereInput[]
+}
+
+export type HolidayUncheckedUpdateManyWithoutEmployeeNestedInput = {
+  create?: Prisma.XOR<Prisma.HolidayCreateWithoutEmployeeInput, Prisma.HolidayUncheckedCreateWithoutEmployeeInput> | Prisma.HolidayCreateWithoutEmployeeInput[] | Prisma.HolidayUncheckedCreateWithoutEmployeeInput[]
+  connectOrCreate?: Prisma.HolidayCreateOrConnectWithoutEmployeeInput | Prisma.HolidayCreateOrConnectWithoutEmployeeInput[]
+  upsert?: Prisma.HolidayUpsertWithWhereUniqueWithoutEmployeeInput | Prisma.HolidayUpsertWithWhereUniqueWithoutEmployeeInput[]
+  createMany?: Prisma.HolidayCreateManyEmployeeInputEnvelope
+  set?: Prisma.HolidayWhereUniqueInput | Prisma.HolidayWhereUniqueInput[]
+  disconnect?: Prisma.HolidayWhereUniqueInput | Prisma.HolidayWhereUniqueInput[]
+  delete?: Prisma.HolidayWhereUniqueInput | Prisma.HolidayWhereUniqueInput[]
+  connect?: Prisma.HolidayWhereUniqueInput | Prisma.HolidayWhereUniqueInput[]
+  update?: Prisma.HolidayUpdateWithWhereUniqueWithoutEmployeeInput | Prisma.HolidayUpdateWithWhereUniqueWithoutEmployeeInput[]
+  updateMany?: Prisma.HolidayUpdateManyWithWhereWithoutEmployeeInput | Prisma.HolidayUpdateManyWithWhereWithoutEmployeeInput[]
+  deleteMany?: Prisma.HolidayScalarWhereInput | Prisma.HolidayScalarWhereInput[]
+}
+
+export type EnumRequestStatusFieldUpdateOperationsInput = {
+  set?: $Enums.RequestStatus
+}
+
+export type HolidayCreateWithoutEmployeeInput = {
+  startDate: Date | string
+  endDate: Date | string
+  reason?: string | null
+  status?: $Enums.RequestStatus
+  adminNote?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type HolidayUncheckedCreateWithoutEmployeeInput = {
+  id?: number
+  startDate: Date | string
+  endDate: Date | string
+  reason?: string | null
+  status?: $Enums.RequestStatus
+  adminNote?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type HolidayCreateOrConnectWithoutEmployeeInput = {
+  where: Prisma.HolidayWhereUniqueInput
+  create: Prisma.XOR<Prisma.HolidayCreateWithoutEmployeeInput, Prisma.HolidayUncheckedCreateWithoutEmployeeInput>
+}
+
+export type HolidayCreateManyEmployeeInputEnvelope = {
+  data: Prisma.HolidayCreateManyEmployeeInput | Prisma.HolidayCreateManyEmployeeInput[]
+  skipDuplicates?: boolean
+}
+
+export type HolidayUpsertWithWhereUniqueWithoutEmployeeInput = {
+  where: Prisma.HolidayWhereUniqueInput
+  update: Prisma.XOR<Prisma.HolidayUpdateWithoutEmployeeInput, Prisma.HolidayUncheckedUpdateWithoutEmployeeInput>
+  create: Prisma.XOR<Prisma.HolidayCreateWithoutEmployeeInput, Prisma.HolidayUncheckedCreateWithoutEmployeeInput>
+}
+
+export type HolidayUpdateWithWhereUniqueWithoutEmployeeInput = {
+  where: Prisma.HolidayWhereUniqueInput
+  data: Prisma.XOR<Prisma.HolidayUpdateWithoutEmployeeInput, Prisma.HolidayUncheckedUpdateWithoutEmployeeInput>
+}
+
+export type HolidayUpdateManyWithWhereWithoutEmployeeInput = {
+  where: Prisma.HolidayScalarWhereInput
+  data: Prisma.XOR<Prisma.HolidayUpdateManyMutationInput, Prisma.HolidayUncheckedUpdateManyWithoutEmployeeInput>
+}
+
+export type HolidayScalarWhereInput = {
+  AND?: Prisma.HolidayScalarWhereInput | Prisma.HolidayScalarWhereInput[]
+  OR?: Prisma.HolidayScalarWhereInput[]
+  NOT?: Prisma.HolidayScalarWhereInput | Prisma.HolidayScalarWhereInput[]
+  id?: Prisma.IntFilter<"Holiday"> | number
+  employeeId?: Prisma.StringFilter<"Holiday"> | string
+  startDate?: Prisma.DateTimeFilter<"Holiday"> | Date | string
+  endDate?: Prisma.DateTimeFilter<"Holiday"> | Date | string
+  reason?: Prisma.StringNullableFilter<"Holiday"> | string | null
+  status?: Prisma.EnumRequestStatusFilter<"Holiday"> | $Enums.RequestStatus
+  adminNote?: Prisma.StringNullableFilter<"Holiday"> | string | null
+  createdAt?: Prisma.DateTimeFilter<"Holiday"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Holiday"> | Date | string
+}
+
+export type HolidayCreateManyEmployeeInput = {
+  id?: number
+  startDate: Date | string
+  endDate: Date | string
+  reason?: string | null
+  status?: $Enums.RequestStatus
+  adminNote?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type HolidayUpdateWithoutEmployeeInput = {
+  startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+  adminNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type HolidayUncheckedUpdateWithoutEmployeeInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+  adminNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type HolidayUncheckedUpdateManyWithoutEmployeeInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+  adminNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 
 
 export type HolidaySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  date?: boolean
-  name?: boolean
-  type?: boolean
+  employeeId?: boolean
+  startDate?: boolean
+  endDate?: boolean
+  reason?: boolean
+  status?: boolean
+  adminNote?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
+  employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["holiday"]>
 
 export type HolidaySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  date?: boolean
-  name?: boolean
-  type?: boolean
+  employeeId?: boolean
+  startDate?: boolean
+  endDate?: boolean
+  reason?: boolean
+  status?: boolean
+  adminNote?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
+  employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["holiday"]>
 
 export type HolidaySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  date?: boolean
-  name?: boolean
-  type?: boolean
+  employeeId?: boolean
+  startDate?: boolean
+  endDate?: boolean
+  reason?: boolean
+  status?: boolean
+  adminNote?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
+  employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["holiday"]>
 
 export type HolidaySelectScalar = {
   id?: boolean
-  date?: boolean
-  name?: boolean
-  type?: boolean
+  employeeId?: boolean
+  startDate?: boolean
+  endDate?: boolean
+  reason?: boolean
+  status?: boolean
+  adminNote?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
 }
 
-export type HolidayOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date" | "name" | "type", ExtArgs["result"]["holiday"]>
+export type HolidayOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "employeeId" | "startDate" | "endDate" | "reason" | "status" | "adminNote" | "createdAt" | "updatedAt", ExtArgs["result"]["holiday"]>
+export type HolidayInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
+}
+export type HolidayIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
+}
+export type HolidayIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
+}
 
 export type $HolidayPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Holiday"
-  objects: {}
+  objects: {
+    employee: Prisma.$EmployeePayload<ExtArgs>
+  }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
-    date: Date
-    name: string
-    type: string
+    employeeId: string
+    startDate: Date
+    endDate: Date
+    reason: string | null
+    status: $Enums.RequestStatus
+    adminNote: string | null
+    createdAt: Date
+    updatedAt: Date
   }, ExtArgs["result"]["holiday"]>
   composites: {}
 }
@@ -758,6 +1070,7 @@ readonly fields: HolidayFieldRefs;
  */
 export interface Prisma__HolidayClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  employee<T extends Prisma.EmployeeDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.EmployeeDefaultArgs<ExtArgs>>): Prisma.Prisma__EmployeeClient<runtime.Types.Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -788,9 +1101,14 @@ export interface Prisma__HolidayClient<T, Null = never, ExtArgs extends runtime.
  */
 export interface HolidayFieldRefs {
   readonly id: Prisma.FieldRef<"Holiday", 'Int'>
-  readonly date: Prisma.FieldRef<"Holiday", 'DateTime'>
-  readonly name: Prisma.FieldRef<"Holiday", 'String'>
-  readonly type: Prisma.FieldRef<"Holiday", 'String'>
+  readonly employeeId: Prisma.FieldRef<"Holiday", 'String'>
+  readonly startDate: Prisma.FieldRef<"Holiday", 'DateTime'>
+  readonly endDate: Prisma.FieldRef<"Holiday", 'DateTime'>
+  readonly reason: Prisma.FieldRef<"Holiday", 'String'>
+  readonly status: Prisma.FieldRef<"Holiday", 'RequestStatus'>
+  readonly adminNote: Prisma.FieldRef<"Holiday", 'String'>
+  readonly createdAt: Prisma.FieldRef<"Holiday", 'DateTime'>
+  readonly updatedAt: Prisma.FieldRef<"Holiday", 'DateTime'>
 }
     
 
@@ -807,6 +1125,10 @@ export type HolidayFindUniqueArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * Omit specific fields from the Holiday
    */
   omit?: Prisma.HolidayOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayInclude<ExtArgs> | null
   /**
    * Filter, which Holiday to fetch.
    */
@@ -826,6 +1148,10 @@ export type HolidayFindUniqueOrThrowArgs<ExtArgs extends runtime.Types.Extension
    */
   omit?: Prisma.HolidayOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayInclude<ExtArgs> | null
+  /**
    * Filter, which Holiday to fetch.
    */
   where: Prisma.HolidayWhereUniqueInput
@@ -843,6 +1169,10 @@ export type HolidayFindFirstArgs<ExtArgs extends runtime.Types.Extensions.Intern
    * Omit specific fields from the Holiday
    */
   omit?: Prisma.HolidayOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayInclude<ExtArgs> | null
   /**
    * Filter, which Holiday to fetch.
    */
@@ -892,6 +1222,10 @@ export type HolidayFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extensions
    */
   omit?: Prisma.HolidayOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayInclude<ExtArgs> | null
+  /**
    * Filter, which Holiday to fetch.
    */
   where?: Prisma.HolidayWhereInput
@@ -939,6 +1273,10 @@ export type HolidayFindManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Omit specific fields from the Holiday
    */
   omit?: Prisma.HolidayOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayInclude<ExtArgs> | null
   /**
    * Filter, which Holidays to fetch.
    */
@@ -988,6 +1326,10 @@ export type HolidayCreateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    */
   omit?: Prisma.HolidayOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayInclude<ExtArgs> | null
+  /**
    * The data needed to create a Holiday.
    */
   data: Prisma.XOR<Prisma.HolidayCreateInput, Prisma.HolidayUncheckedCreateInput>
@@ -1021,6 +1363,10 @@ export type HolidayCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensi
    */
   data: Prisma.HolidayCreateManyInput | Prisma.HolidayCreateManyInput[]
   skipDuplicates?: boolean
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1035,6 +1381,10 @@ export type HolidayUpdateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    * Omit specific fields from the Holiday
    */
   omit?: Prisma.HolidayOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayInclude<ExtArgs> | null
   /**
    * The data needed to update a Holiday.
    */
@@ -1087,6 +1437,10 @@ export type HolidayUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensi
    * Limit how many Holidays to update.
    */
   limit?: number
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1101,6 +1455,10 @@ export type HolidayUpsertArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    * Omit specific fields from the Holiday
    */
   omit?: Prisma.HolidayOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayInclude<ExtArgs> | null
   /**
    * The filter to search for the Holiday to update in case it exists.
    */
@@ -1127,6 +1485,10 @@ export type HolidayDeleteArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    * Omit specific fields from the Holiday
    */
   omit?: Prisma.HolidayOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayInclude<ExtArgs> | null
   /**
    * Filter which Holiday to delete.
    */
@@ -1159,4 +1521,8 @@ export type HolidayDefaultArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Omit specific fields from the Holiday
    */
   omit?: Prisma.HolidayOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HolidayInclude<ExtArgs> | null
 }

@@ -23,12 +23,15 @@ export const runAbsentBackfill = async () => {
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
   );
 
-  const holiday = await prisma.holiday.findUnique({
-    where: { date: startOfDayUtc }
+  const holiday = await prisma.holiday.findFirst({
+    where: {
+      startDate: { lte: startOfDayUtc },
+      endDate: { gte: startOfDayUtc }
+    }
   });
 
   if (holiday) {
-    console.log(`[Absent Job] Today is a holiday: ${holiday.name}. Skipping backfill.`);
+    console.log(`[Absent Job] Today is a holiday: ${holiday.reason ?? 'holiday'}. Skipping backfill.`);
     return;
   }
 

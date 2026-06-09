@@ -7,7 +7,11 @@ import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/get-error-message';
 import { UserPlus, Loader2 } from 'lucide-react';
 
-export const AdminRegisterForm: React.FC = () => {
+interface AdminRegisterFormProps {
+  onSuccess: () => void;
+}
+
+export const AdminRegisterForm: React.FC<AdminRegisterFormProps> = ({ onSuccess }) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -56,6 +60,7 @@ export const AdminRegisterForm: React.FC = () => {
       });
       toast.success('User registered successfully');
       setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+      onSuccess();
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Registration failed'));
     } finally {

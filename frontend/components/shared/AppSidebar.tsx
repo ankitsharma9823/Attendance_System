@@ -37,16 +37,14 @@ export const AppSidebar = ({ children }: { children: React.ReactNode }) => {
 
   const navItems = [
     { href: '/', label: 'Overview', icon: LayoutDashboard },
-    { href: '/attendance/today', label: "Today", icon: Clock },
-    { href: '/attendance', label: 'Ledger', icon: History },
-    { href: '/employees/stats', label: 'Analytics', icon: TrendingUp },
+    { href: '/attendance', label: 'Attendance', icon: History },
+    { href: '/holiday', label: 'Message', icon: History },
   ];
 
   const adminItems = user?.role === 'admin' ? [
-    { href: '/schedule', label: 'Schedule', icon: Settings },
-    { href: '/users/add', label: 'Add App User', icon: UserPlus },
-    { href: '/device/users', label: 'Machine Users', icon: Users },
-    { href: '/device/users/add', label: 'Add Machine User', icon: UserCog },
+    { href: '/device/users', label: 'Users', icon: Users },
+    { href: '/schedule', label: 'Setting', icon: Settings },
+    { href: '/admin_message', label: 'Admin Message', icon: Settings },
   ] : [];
 
   const initials = user?.username?.slice(0, 2).toUpperCase() || 'US';
@@ -73,11 +71,9 @@ export const AppSidebar = ({ children }: { children: React.ReactNode }) => {
     <aside className="w-60 h-full flex flex-col bg-zinc-50 px-4 py-6">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-3 py-1 mb-8">
-        <div className="w-8 h-8 bg-zinc-900 rounded-xl flex items-center justify-center shadow-md shadow-zinc-950/10">
-          <Cpu size={16} className="text-white" strokeWidth={2.5} />
-        </div>
-        <span className="font-extrabold text-16px tracking-tight text-zinc-900">
-          Attend<span className="text-zinc-400 font-medium">OS</span>
+        
+        <span className="font-bold text-16px uppercase text-zinc-900 text-xl tracking-wider md:text-2xl">
+          Aara<span className='text-[#964394]'>mbha</span>
         </span>
       </div>
 
@@ -101,7 +97,8 @@ export const AppSidebar = ({ children }: { children: React.ReactNode }) => {
       </nav>
 
       {/* User footer */}
-      <div className="pt-4 mt-4 bg-zinc-100/50 rounded-2xl p-3 shadow-inner">
+      <div className="pt-4 mt-4 bg-zinc-100/50 rounded-2xl p-3 
+      shadow-inner">
         <div className="flex items-center gap-2.5 mb-3 px-1">
           <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center font-mono text-[11px] font-semibold text-zinc-800 shrink-0">
             {initials}
@@ -140,7 +137,7 @@ export const AppSidebar = ({ children }: { children: React.ReactNode }) => {
       {/* Sidebar Desktop/Mobile Wrapper */}
       <div className={`
         fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-out
-        lg:sticky lg:translate-x-0 lg:h-screen lg:sticky lg:top-0 shrink-0
+        lg:sticky lg:translate-x-0 lg:h-screen lg:top-0 shrink-0
         ${isOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'}
       `}>
         {sidebarContent}

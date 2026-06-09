@@ -52,8 +52,8 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   Employee: 'Employee',
-  WorkRecord: 'WorkRecord',
   User: 'User',
+  WorkRecord: 'WorkRecord',
   AttendanceSchedule: 'AttendanceSchedule',
   SyncLog: 'SyncLog',
   Holiday: 'Holiday'
@@ -86,6 +86,25 @@ export const EmployeeScalarFieldEnum = {
 export type EmployeeScalarFieldEnum = (typeof EmployeeScalarFieldEnum)[keyof typeof EmployeeScalarFieldEnum]
 
 
+export const UserScalarFieldEnum = {
+  id: 'id',
+  username: 'username',
+  email: 'email',
+  password: 'password',
+  role: 'role',
+  employeeId: 'employeeId',
+  emailVerified: 'emailVerified',
+  emailVerificationCode: 'emailVerificationCode',
+  emailVerificationExpiry: 'emailVerificationExpiry',
+  passwordResetToken: 'passwordResetToken',
+  passwordResetExpiry: 'passwordResetExpiry',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
 export const WorkRecordScalarFieldEnum = {
   id: 'id',
   employeeId: 'employeeId',
@@ -103,24 +122,6 @@ export const WorkRecordScalarFieldEnum = {
 } as const
 
 export type WorkRecordScalarFieldEnum = (typeof WorkRecordScalarFieldEnum)[keyof typeof WorkRecordScalarFieldEnum]
-
-
-export const UserScalarFieldEnum = {
-  id: 'id',
-  username: 'username',
-  email: 'email',
-  password: 'password',
-  role: 'role',
-  emailVerified: 'emailVerified',
-  emailVerificationCode: 'emailVerificationCode',
-  emailVerificationExpiry: 'emailVerificationExpiry',
-  passwordResetToken: 'passwordResetToken',
-  passwordResetExpiry: 'passwordResetExpiry',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
 export const AttendanceScheduleScalarFieldEnum = {
@@ -154,9 +155,14 @@ export type SyncLogScalarFieldEnum = (typeof SyncLogScalarFieldEnum)[keyof typeo
 
 export const HolidayScalarFieldEnum = {
   id: 'id',
-  date: 'date',
-  name: 'name',
-  type: 'type'
+  employeeId: 'employeeId',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  reason: 'reason',
+  status: 'status',
+  adminNote: 'adminNote',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type HolidayScalarFieldEnum = (typeof HolidayScalarFieldEnum)[keyof typeof HolidayScalarFieldEnum]
