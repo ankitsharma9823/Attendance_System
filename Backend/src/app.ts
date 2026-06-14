@@ -35,7 +35,7 @@ import { apiLimiter } from "./middleware/rate-limit.middleware";
 const app = express();
 app.use(
   cors({
-    origin: (origin, callback) => callback(null, true), // allow all
+    origin: (origin, callback) => callback(null, true),
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,

@@ -173,7 +173,7 @@ export default function AddMachineUserForm({ onSuccess }: AddMachineUserFormProp
   };
 
   return (
-    <div className="w-full max-w-[400px] mx-auto py-4">
+    <div className="w-full max-w-100 mx-auto py-4">
       {/* Header Section */}
       <header className="mb-6">
         <div className="flex items-center gap-4 p-1">

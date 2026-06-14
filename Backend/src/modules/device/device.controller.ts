@@ -151,7 +151,6 @@ async deleteUser(req: Request, res: Response) {
         rawUid = req.body.uid;
       }
 
-      // 3. Attempt parsing. If it's missing, pass NaN. Our engine's lookup handler will find it safely.
       let parsedUid = rawUid !== undefined ? parseInt(String(rawUid), 10) : NaN;
       if (isNaN(parsedUid) || parsedUid <= 0) {
         parsedUid = NaN;
@@ -159,7 +158,6 @@ async deleteUser(req: Request, res: Response) {
 
       console.log(`[Device Controller] Deletion pipeline validated. User ID: "${userid}", Extracted UID: ${parsedUid}`);
 
-      // 4. Fire to service layer
       const result = await deviceService.deleteUser(parsedUid, userid);
       return res.status(200).json(result);
 

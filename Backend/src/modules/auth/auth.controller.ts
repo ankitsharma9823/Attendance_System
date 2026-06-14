@@ -29,7 +29,8 @@ const findUserByEmail = (email: string) => {
     },
   });
 };
-export const AdminRegisterUser = async (req: any, res: Response) => {
+
+export const AdminRegisterUser = async (req: AuthRequest, res: Response) => {
   try {
     if (req.user?.role !== "admin") {
       return res.status(403).json({ msg: "Only admins can register users" });
@@ -46,20 +47,18 @@ export const AdminRegisterUser = async (req: any, res: Response) => {
       return res.status(409).json({ msg: "User already exists" });
     }
 
-    // Check if username matches an employee ID
     const employee = await prisma.employee.findFirst({
       where: {
         name: {
           equals: username.trim(),
-          mode: "insensitive", // Makes "John Doe" match "john doe"
+          mode: "insensitive",
         },
       },
     });
 
-    // Warn but don't block — admin accounts won't have an employee
     if (!employee && role !== "admin") {
       return res.status(400).json({
-        msg: `No employee found with ID "${username}". Username must match an employee ID from the device.`,
+        msg: `No employee found with name "${username}". Username must match an employee name from the device.`,
       });
     }
 
@@ -71,7 +70,7 @@ export const AdminRegisterUser = async (req: any, res: Response) => {
         email: normalizedEmail,
         password: hashedPassword,
         role: role === "admin" ? "admin" : "user",
-        employeeId: employee?.id ?? null, // auto-link if employee exists
+        employeeId: employee?.id ?? null,
         emailVerified: true,
         emailVerificationCode: null,
         emailVerificationExpiry: null,
@@ -90,17 +89,15 @@ export const AdminRegisterUser = async (req: any, res: Response) => {
     });
   } catch (error) {
     console.error("AdminRegisterUser error:", error);
-    res.status(500).json({ msg: "Internal Server Error", error });
+    return res.status(500).json({ msg: "Internal Server Error", error });
   }
 };
+
 export const Register = async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
-      res
-        .status(400)
-        .json({ success: false, message: "Missing required fields." });
-      return;
+      return res.status(400).json({ msg: "Missing required fields" });
     }
 
     const normalizedEmail = normalizeEmail(email);
@@ -136,7 +133,7 @@ export const Register = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Register error:", error);
-    res.status(500).json({ msg: "Internal Server Error", error });
+    return res.status(500).json({ msg: "Internal Server Error", error });
   }
 };
 
@@ -144,10 +141,7 @@ export const VerifyEmail = async (req: Request, res: Response) => {
   try {
     const { email, otp } = req.body;
     if (!email || !otp) {
-      res
-        .status(400)
-        .json({ success: false, message: "Missing required fields." });
-      return;
+      return res.status(400).json({ msg: "Missing required fields" });
     }
 
     const user = await findUserByEmail(email);
@@ -179,7 +173,7 @@ export const VerifyEmail = async (req: Request, res: Response) => {
     return res.status(200).json({ msg: "Email verified successfully" });
   } catch (error) {
     console.error("VerifyEmail error:", error);
-    res.status(500).json({ msg: "Internal Server Error", error });
+    return res.status(500).json({ msg: "Internal Server Error", error });
   }
 };
 
@@ -187,8 +181,7 @@ export const ResendVerification = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
     if (!email) {
-      res.status(400).json({ success: false, message: "Email is required." });
-      return;
+      return res.status(400).json({ msg: "Email is required" });
     }
 
     const user = await findUserByEmail(email);
@@ -216,27 +209,25 @@ export const ResendVerification = async (req: Request, res: Response) => {
       return res.status(500).json({ msg: "Failed to send verification email" });
     }
 
-    return res
-      .status(200)
-      .json({ msg: "Verification code resent", email: user.email });
+    return res.status(200).json({ msg: "Verification code resent", email: user.email });
   } catch (error) {
     console.error("ResendVerification error:", error);
-    res.status(500).json({ msg: "Internal Server Error", error });
+    return res.status(500).json({ msg: "Internal Server Error", error });
   }
 };
-
 export const Login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      res
-        .status(400)
-        .json({ success: false, message: "Missing required fields." });
-      return;
+      return res.status(400).json({ msg: "Missing required fields" });
     }
-      
-    const user = await findUserByEmail(email);
-    console.log("User found:", user ? user.email : "NULL");
+
+    // 1. Fetch user AND include the related employee object
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: normalizeEmail(email), mode: "insensitive" } },
+      include: { employee: true } // Ensure you include the employee relation
+    });
+
     if (!user) {
       return res.status(401).json({ msg: "Invalid credentials" });
     }
@@ -250,13 +241,14 @@ export const Login = async (req: Request, res: Response) => {
     }
 
     const passwordMatch = await verifyPassword(password, user.password);
-    console.log("Password match result:", passwordMatch);
     if (!passwordMatch) {
       return res.status(401).json({ msg: "Invalid credentials" });
     }
 
+    // 2. Use user.employee.id if it exists, otherwise use user.id or handle as needed
+    // Assuming you want to use the employee's ID if available
     const token = generateToken({
-      id: user.id,
+      id: user.employeeId ? user.employeeId : user.id.toString(), 
       email: user.email,
       username: user.username,
       role: user.role,
@@ -276,7 +268,7 @@ export const Login = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ msg: "Internal Server Error", error });
+    return res.status(500).json({ msg: "Internal Server Error", error });
   }
 };
 
@@ -284,8 +276,7 @@ export const ForgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
     if (!email) {
-      res.status(400).json({ success: false, message: "Email is required." });
-      return;
+      return res.status(400).json({ msg: "Email is required" });
     }
 
     const user = await findUserByEmail(email);
@@ -309,12 +300,10 @@ export const ForgotPassword = async (req: Request, res: Response) => {
       return res.status(500).json({ msg: "Failed to send reset email" });
     }
 
-    return res.status(200).json({
-      msg: "Password reset link sent to email",
-    });
+    return res.status(200).json({ msg: "Password reset link sent to email" });
   } catch (error) {
     console.error("ForgotPassword error:", error);
-    res.status(500).json({ msg: "Internal Server Error", error });
+    return res.status(500).json({ msg: "Internal Server Error", error });
   }
 };
 
@@ -322,10 +311,7 @@ export const ResetPassword = async (req: Request, res: Response) => {
   try {
     const { token, newPassword } = req.body;
     if (!token || !newPassword) {
-      res
-        .status(400)
-        .json({ success: false, message: "Missing required fields." });
-      return;
+      return res.status(400).json({ msg: "Missing required fields" });
     }
 
     const user = await prisma.user.findFirst({
@@ -354,7 +340,7 @@ export const ResetPassword = async (req: Request, res: Response) => {
     return res.status(200).json({ msg: "Password reset successful" });
   } catch (error) {
     console.error("ResetPassword error:", error);
-    res.status(500).json({ msg: "Internal Server Error", error });
+    return res.status(500).json({ msg: "Internal Server Error", error });
   }
 };
 
@@ -362,69 +348,98 @@ export const getUser = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = 10;
-    const users = await prisma.user.findMany({
-      skip: (page - 1) * limit,
-      take: limit,
-      select: { id: true, username: true, email: true, role: true },
-    });
-    const total = await prisma.user.count();
-    res.json({ users, meta: { page, totalPages: Math.ceil(total / limit) } });
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          role: true,
+          employeeId: true,
+        },
+      }),
+      prisma.user.count(),
+    ]);
+
+    return res.json({ users, meta: { page, totalPages: Math.ceil(total / limit) } });
   } catch (error) {
-    res.status(500).json({ msg: "Error" });
+    console.error("getUser error:", error);
+    return res.status(500).json({ msg: "Internal server error" });
   }
 };
 
 export const updateUser = async (req: AuthRequest, res: Response) => {
   try {
-    const authenticatedUserId = req.user?.id;
-    const { username, role } = req.body;
-
-    if (!authenticatedUserId) {
-      return res.status(401).json({ msg: "Unauthorized" });
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ msg: "Admins only" });
     }
 
-    const dataToUpdate: any = { username };
+    const targetId = parseInt(req.params.id as string);
+    if (isNaN(targetId)) {
+      return res.status(400).json({ msg: "Invalid user ID" });
+    }
 
-    if (req.user?.role === "admin" && role) {
-      dataToUpdate.role = role;
+    const existing = await prisma.user.findUnique({ where: { id: targetId } });
+    if (!existing) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    const { username, role, email, employeeId } = req.body;
+    const dataToUpdate: Record<string, any> = {};
+
+    if (username !== undefined)   dataToUpdate.username   = username.trim();
+    if (role !== undefined)       dataToUpdate.role       = role;
+    if (email !== undefined)      dataToUpdate.email      = normalizeEmail(email);
+    if (employeeId !== undefined) dataToUpdate.employeeId = employeeId;
+
+    if (Object.keys(dataToUpdate).length === 0) {
+      return res.status(400).json({ msg: "No fields provided to update" });
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: authenticatedUserId },
+      where: { id: targetId },
       data: dataToUpdate,
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        email: true,
+        employeeId: true,
+      },
     });
 
-    res.status(200).json({ msg: "Profile updated", user: updatedUser });
+    return res.status(200).json({ msg: "User updated", user: updatedUser });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Internal server error" });
+    console.error("updateUser error:", error);
+    return res.status(500).json({ msg: "Internal server error" });
   }
 };
 
 export const deleteUser = async (req: AuthRequest, res: Response) => {
   try {
-    const id = parseInt(String(req.params.id));
-
-    if (isNaN(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Valid User ID is required" });
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ msg: "Admins only" });
     }
-
-    const existing = await prisma.user.findUnique({ where: { id } });
+    const targetId = parseInt(req.params.id as string);
+    if (isNaN(targetId)) {
+      return res.status(400).json({ msg: "Invalid user ID" });
+    }
+    const existing = await prisma.user.findUnique({ where: { id: targetId } });
     if (!existing) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({ msg: "User not found" });
     }
+    await prisma.user.delete({ 
+      where: { id: targetId } 
+    });
 
-    await prisma.user.delete({ where: { id } });
-
-    return res
-      .status(200)
-      .json({ success: true, message: "User deleted successfully" });
+    return res.status(200).json({ msg: "User permanently removed from the system" });
   } catch (error) {
     console.error("deleteUser error:", error);
-    return res.status(500).json({ msg: "Internal server error" });
+    return res.status(500).json({ 
+        msg: "Failed to delete user. The user may be linked to existing attendance records." 
+    });
   }
 };

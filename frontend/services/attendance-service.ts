@@ -19,17 +19,16 @@ const unwrapData = <T>(response: ApiResponse<T>, fallback: T): T => {
 
 export const attendanceService = {
 
-  getAttendance: async (filters: AttendanceFilters = {}): Promise<WorkRecord[]> => {
-    const { date, year = new Date().getFullYear(), employeeId } = filters;
-    const response = await apiClient.get<ApiResponse<WorkRecord[]>>(
-      date ? '/attendance/daily' : '/attendance/yearly',
-      {
-        params: date ? { date, employeeId } : { year, employeeId },
-      },
-    );
-
-    return unwrapData(response.data, []);
-  },
+ getAttendance: async (filters: AttendanceFilters = {}): Promise<WorkRecord[]> => {
+  const { date, year = new Date().getFullYear(), employeeId } = filters;
+  const response = await apiClient.get<ApiResponse<WorkRecord[]>>(
+    date ? '/attendance/daily-full' : '/attendance/yearly',  // ← changed
+    {
+      params: date ? { date, employeeId } : { year, employeeId },
+    },
+  );
+  return unwrapData(response.data, []);
+},
 
   getYearlyStats: async (year: number): Promise<YearlyAttendanceStat[]> => {
     const response = await apiClient.get<ApiResponse<YearlyAttendanceStat[]>>('/attendance/stats/yearly', {
@@ -52,8 +51,16 @@ export const attendanceService = {
     const response = await apiClient.delete(`/attendance/${id}`);
     return response.data;
   },
-  updateStatus: async (id: number, status: AttendanceStatus): Promise<{ success: boolean; message: string }> => {
-    const response = await apiClient.patch<{ success: boolean; message: string }>(`/attendance/${id}/status`, { status });
-    return response.data;
-  },
+ updateStatus: async (
+  id: number, 
+  status: AttendanceStatus,
+  employeeId?: string,
+  date?: string,
+): Promise<{ success: boolean; message: string }> => {
+  const response = await apiClient.patch<{ success: boolean; message: string }>(
+    `/attendance/${id}/status`, 
+    { status, employeeId, date }
+  );
+  return response.data;
+},
 };

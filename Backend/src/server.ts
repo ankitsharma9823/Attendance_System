@@ -77,7 +77,8 @@
 import "dotenv/config";
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-
+import { evaluateEndOfDayMissingPunches } from "./modules/attendance/machine.engine";
+import cron from "node-cron";
 import app from "./app";
 import { setDeviceTime, syncEmployeesFromDevice, startRealTimeListener } from "./modules/device/device.engine";
 import { loadScheduleCache } from "./services/schedule.service";
@@ -127,7 +128,6 @@ if (ENABLE_WEBSOCKET) {
 }
 
 export { io };
-
 httpServer.listen(PORT, async () => {
   console.log(`Production Core Engine Online on Port ${PORT}`);
   console.log(`Target Device Configuration: ${DEVICE_CONFIG.IP}:${DEVICE_CONFIG.PORT}`);
@@ -136,6 +136,17 @@ httpServer.listen(PORT, async () => {
   console.log("[System] Attendance schedule loaded into memory cache.");
 
   scheduleAbsentJob();
+
+  cron.schedule("15 11 * * 0-5", async () => {
+    console.log("[Cron] Running end-of-day sweep...");
+    try {
+      await evaluateEndOfDayMissingPunches();
+      console.log("[Cron] End-of-day sweep complete.");
+    } catch (e) {
+      console.error("[Cron] End-of-day sweep failed:", e);
+    }
+  });
+  console.log("[Cron] Scheduler initialized.");
 
   if (DEVICE_STARTUP_SYNC) {
     await runDeviceStartup();

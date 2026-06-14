@@ -2,9 +2,8 @@ import { Router } from "express";
 import {
   getAttendanceByYear,
   getYearlyStats,
-  getAttendanceByDay,
-  deleteRecord,
   updateAttendanceStatus,
+  getDailyAttendanceWithAbsent
 } from "./attendance.controller";
 import { authenticate } from "../../middleware/auth.middleware";
 
@@ -14,8 +13,7 @@ router.use(authenticate);
 
 router.get("/yearly", getAttendanceByYear);
 router.get("/stats/yearly", getYearlyStats);
-router.get("/daily", getAttendanceByDay);
-router.delete("/:id", deleteRecord);
 router.patch("/:id/status", updateAttendanceStatus);
+router.get("/daily-full", getDailyAttendanceWithAbsent);
 
 export default router;

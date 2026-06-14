@@ -1,4 +1,4 @@
-export type AttendanceStatus = 'PRESENT' | 'LATE' | 'HALF_DAY' | 'EARLY_LEAVE' | 'ABSENT';
+export type AttendanceStatus = 'PRESENT' | 'LATE' | 'HALF_DAY' | 'EARLY_LEAVE' | 'ABSENT' | 'LEAVE';
 export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface User {
@@ -10,8 +10,11 @@ export interface User {
 }
 
 export interface WorkRecord {
-  id: number;
+  id: number | null;
   employeeId: string;
+  name?: string;          
+  department?: string;    
+  position?: string;    
   date: string;
   checkIn: string | null;
   checkOut: string | null;
@@ -20,6 +23,7 @@ export interface WorkRecord {
   overtime: number;
   isOvertime: boolean;
   isHalfDay: boolean;
+  totalHours: number;
   status: AttendanceStatus;
   employee?: {
     name: string;

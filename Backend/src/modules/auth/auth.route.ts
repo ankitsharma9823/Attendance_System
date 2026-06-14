@@ -19,8 +19,10 @@ router.post("/resend-verification", ResendVerification);
 router.post("/login", Login);
 router.post("/forgot-password", ForgotPassword);
 router.post("/reset-password", ResetPassword);
-router.post("/admin/register", authenticate,AdminRegisterUser);
-router.get("/user", getUser)
-router.put("/user", authenticate, updateUser);
-router.delete('/user/:id', deleteUser);
+
+router.post("/admin/register", authenticate, AdminRegisterUser);
+router.get("/user", authenticate, getUser);
+router.put("/user/:id", authenticate, updateUser);
+router.delete("/user/:id", authenticate, deleteUser);
+
 export default router;

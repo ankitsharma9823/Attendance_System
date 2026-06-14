@@ -43,7 +43,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       const response = await authService.register({ username, email, password });
-      // After registration, user needs to verify email
       return response;
     } finally {
       setIsLoading(false);

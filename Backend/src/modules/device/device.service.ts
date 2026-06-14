@@ -1,9 +1,6 @@
 import prisma from "../../config/db";
 import {
   syncWithMachine,
-  syncEmployeesFromDevice,
-  syncDeviceUsersFromDatabase,
-  getDeviceUsers,
   addDeviceUser,
   updateDeviceUser,
   deleteDeviceUser,
@@ -79,7 +76,6 @@ export class DeviceService {
     };
   }
 
-  // FIXED: Re-added the method wrapper here so TypeScript understands the block context
  async getUsers(page: number = 1, limit: number = 10) {
   const skip = (page - 1) * limit;
 

@@ -24,17 +24,18 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Add response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized
+    // Check for 401 (Unauthorized) OR 403 (Forbidden/Deactivated)
+    if (error.response?.status === 401 || error.response?.status === 403) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
         
-        // Force redirect to login page to prevent "ghost" sessions
+        // Optional: Show a toast notification if you have one
+        // toast.error("Session expired or account deactivated.");
+
         if (!window.location.pathname.includes('/auth/login')) {
           window.location.href = '/auth/login';
         }
