@@ -1,8 +1,8 @@
 import { prisma } from "../config/db";
 import { hashPassword } from "../modules/auth/auth.service";
 
-const email = "rimalankush587@gmail.com";
-const plainPassword = "3184309@w";
+const email = process.env.ADMIN_EMAIL || "admin@example.com";
+const plainPassword = process.env.ADMIN_PASSWORD || "changeme123";
 
 async function main() {
   const existing = await prisma.user.findFirst({ where: { email: email.toLowerCase() } });

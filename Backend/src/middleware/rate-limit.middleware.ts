@@ -26,3 +26,15 @@ export const apiLimiter = rateLimit({
     message: "High traffic detected. Please try again later.",
   },
 });
+
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  skip: skipHealthCheck,
+  message: {
+    success: false,
+    message: "Too many auth attempts. Try again later.",
+  },
+});

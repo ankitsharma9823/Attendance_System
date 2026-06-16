@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { prisma } from "../config/db";
 
+const TIMEZONE = process.env.TIMEZONE || "Asia/Kathmandu";
 const NEPAL_OFFSET_MS = (5 * 60 + 45) * 60 * 1000;
 
 const getNepalStartOfDay = (now: Date): Date => {
@@ -84,7 +85,7 @@ export const runAbsentBackfill = async () => {
 
 export const scheduleAbsentJob = () => {
   cron.schedule("30 23 * * 1-5", runAbsentBackfill, {
-    timezone: "Asia/Kathmandu",
+    timezone: TIMEZONE,
   });
-  console.log("[System Scheduler] Absent backfill job scheduled for 23:30 Nepal time (Mon-Fri).");
+  console.log(`[System Scheduler] Absent backfill job scheduled for 23:30 ${TIMEZONE} time (Mon-Fri).`);
 };

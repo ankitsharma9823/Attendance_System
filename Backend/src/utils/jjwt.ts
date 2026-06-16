@@ -1,10 +1,10 @@
 // utils/jjwt.ts
 import jwt, { SignOptions } from "jsonwebtoken";
 
-const SECRET: string = process.env.JWT_SECRET || "fallback_secret";
+const SECRET: string = process.env.JWT_SECRET;
 
-if (SECRET === "fallback_secret") {
-  console.warn("[JWT] Warning: JWT_SECRET is not set. Using fallback secret.");
+if (!SECRET) {
+  throw new Error("[JWT] CRITICAL: JWT_SECRET environment variable is not set. Server cannot start.");
 }
 
 const EXPIRES = process.env.JWT_EXPIRES_IN || "1d";
