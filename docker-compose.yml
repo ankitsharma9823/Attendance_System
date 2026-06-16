@@ -1,0 +1,75 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: attendancesystem
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  attendance_app:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD:-postgres}@db:5432/attendancesystem
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL:-https://attendance.baralkushal.com.np}
+      DEVICE_IP: ${DEVICE_IP:-192.168.1.201}
+      DEVICE_PORT: ${DEVICE_PORT:-4370}
+      DEVICE_TIMEOUT: ${DEVICE_TIMEOUT:-8800}
+      DEVICE_PASSWORD: ${DEVICE_PASSWORD:-0}
+      DEVICE_AUTO_SYNC: ${DEVICE_AUTO_SYNC:-false}
+      DEVICE_STARTUP_SYNC: ${DEVICE_STARTUP_SYNC:-false}
+      PUNCH_DEBOUNCE_SECONDS: ${PUNCH_DEBOUNCE_SECONDS:-45}
+      SYNC_INTERVAL: ${SYNC_INTERVAL:-180000}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-noreply@attendancesystem.com}
+      ATTENDANCE_TEST_MODE: ${ATTENDANCE_TEST_MODE:-false}
+      TIMEZONE: ${TIMEZONE:-Asia/Kathmandu}
+      PORT: 4001
+      NODE_ENV: production
+      SYNC_STATE_FILE: /data/.sync-state.json
+    volumes:
+      - app_data:/data
+    entrypoint: >
+      sh -c "npx prisma migrate deploy && npx prisma generate && node dist/src/server.js"
+    networks:
+      - default
+      - kushal1o1_caddy_net
+
+  attendance_frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: /api
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: 1
+    networks:
+      - default
+      - kushal1o1_caddy_net
+
+networks:
+  kushal1o1_caddy_net:
+    external: true
+
+volumes:
+  pgdata:
+  app_data:

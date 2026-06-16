@@ -10,7 +10,7 @@ export const DEVICE_CONFIG = {
   PASSWORD: parseInt(process.env.DEVICE_PASSWORD || "0"),
 };
 
-const SYNC_STATE_FILE = path.join(process.cwd(), ".sync-state.json");
+const SYNC_STATE_FILE = process.env.SYNC_STATE_FILE || path.join(process.cwd(), ".sync-state.json");
 interface SyncState {
   lastSyncTime: string | null;
   lastSyncSn: number;
