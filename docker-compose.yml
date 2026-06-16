@@ -44,6 +44,8 @@ services:
       PORT: 4001
       NODE_ENV: production
       SYNC_STATE_FILE: /data/.sync-state.json
+    ports:
+      - "${BACKEND_PORT:-4001}:4001"
     volumes:
       - app_data:/data
     entrypoint: >
@@ -61,17 +63,8 @@ services:
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
-
-  nginx:
-    image: nginx:alpine
-    restart: unless-stopped
     ports:
-      - "80:80"
-    depends_on:
-      - app
-      - frontend
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - "${FRONTEND_PORT:-3000}:3000"
 
 volumes:
   pgdata:
