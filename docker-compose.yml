@@ -14,7 +14,7 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
+  attendance_app:
     build:
       context: ./Backend
       dockerfile: Dockerfile
@@ -50,7 +50,7 @@ services:
       - default
       - kushal1o1_caddy_net
 
-  frontend:
+  attendance_frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
